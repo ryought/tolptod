@@ -40,6 +40,7 @@ export const TickBar: React.FC<Props> = ({ direction, center, scale }) => {
       background: 'black',
       position: 'absolute',
       fontSize: 10,
+      zIndex: 50,
     } as React.CSSProperties
     return (
       <div style={style} key={t}>

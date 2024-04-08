@@ -5,9 +5,10 @@ type Props = {
   region: Region
   k: number
   f: number
+  onAdd: () => void
 }
 
-export const Config: React.FC<Props> = ({ region }) => {
+export const Config: React.FC<Props> = ({ region, onAdd }) => {
   const style = {
     position: 'absolute',
     background: 'white',
@@ -20,6 +21,7 @@ export const Config: React.FC<Props> = ({ region }) => {
   const [freqUp, setFreqUp] = useState(10)
   return (
     <div style={style}>
+      <button onClick={onAdd}>add</button>
       <div>k={k}</div>
       <Slider value={k} onChange={setK} min={1} max={100} />
       <div>freqLow={freqLow}</div>

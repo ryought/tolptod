@@ -6,13 +6,25 @@ type Props = {
   points?: [number, number][]
 }
 
+export type Plot = {
+  x: number
+  y: number
+  scale: number
+  width: number
+  height: number
+  el: JSX.Element
+}
+
 export const Dotplot: React.FC<Props> = ({ width, height }) => {
   const ref = useRef<HTMLCanvasElement>(null)
   const style = {
-    background: 'rgba(100,100,0,0.5)',
+    background: 'white',
+    opacity: 0.7,
     width: '100%',
     height: '100%',
   } as React.CSSProperties
+
+  console.log('dotplot')
 
   // draw wave to canvas
   useEffect(() => {
