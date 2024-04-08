@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Page struct {
@@ -74,6 +75,25 @@ func saveAndLoad() {
 type Ping struct {
 	Status int    `json:"status"`
 	Result string `json:"result"`
+	Points []Point
+}
+
+type Point struct {
+	X int
+	Y int
+}
+
+func (p Point) MarshalText() ([]byte, error) {
+	s := fmt.Sprintf("[%d,%d]", p.X, p.Y)
+	return []byte(s), nil
+}
+
+func pointJsonTest() {
+	p := Point{X: 10, Y: 20}
+	points := []Point{p}
+	// err := json.Unmarshal([]byte("{\"x\":10,\"y\":30}"), &p)
+	s, err := json.Marshal(points)
+	fmt.Println(p, string(s), err)
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +103,8 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("got", key, value)
 		}
 	}
-	ping := Ping{http.StatusOK, "ok"}
+	time.Sleep(5 * time.Second)
+	ping := Ping{http.StatusOK, "ok", []Point{}}
 	res, err := json.Marshal(ping)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -94,6 +115,19 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	filename := os.Args[1]
+	fmt.Println("opening", filename)
+	f, err := os.Open(filename)
+	if err != nil {
+		log.Fatalf("cannot open file %q: %v", filename, err)
+	}
+	defer f.Close()
+	records, err := Parse(f)
+	for i, record := range records {
+		fmt.Println("record", i, string(record.Seq), string(record.ID))
+	}
+
+	pointJsonTest()
 	search()
 	http.HandleFunc("/", handler)
 	http.HandleFunc("/view/", viewHandler)
