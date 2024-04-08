@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	// "os"
+	"os"
 )
 
 type Record struct {
@@ -68,4 +68,19 @@ func Parse(f io.Reader) ([]Record, error) {
 	}
 
 	return records, nil
+}
+
+func ParseFile(filename string) ([]Record, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return Parse(f)
+}
+
+func PrintRecords(records []Record) {
+	for i, record := range records {
+		fmt.Println("record", i, string(record.Seq), string(record.ID))
+	}
 }
