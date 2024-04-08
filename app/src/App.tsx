@@ -1,23 +1,27 @@
-import { useState } from 'react'
-import './App.css'
+import { useState, useEffect } from 'react'
+import { Dotplots } from './Dotplots'
+import { Region } from './TouchPad'
+import { Config } from './Config'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const style = {
+    width: '100vw',
+    height: '100vh',
+    position: 'relative',
+    background: 'gray',
+  } as React.CSSProperties
+
+  const [region, setRegion] = useState<Region>({
+    center: { x: 0, y: 0 },
+    scale: 1,
+  })
+  console.log('region', region)
 
   return (
-    <>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <main style={style}>
+      <Config region={region} />
+      <Dotplots region={region} onChangeRegion={setRegion} />
+    </main>
   )
 }
 
