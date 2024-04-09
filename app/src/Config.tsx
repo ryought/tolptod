@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Region } from './TouchPad'
+import { Record } from './App'
 
 type Props = {
   region: Region
@@ -12,12 +13,12 @@ type Props = {
   freqUp: number
   onChangeFreqUp: (f: number) => void
   // Id related
-  target: number
-  query: number
-  targetIds: string[]
-  queryIds: string[]
-  onChangeTarget: (target: number) => void
-  onChangeQuery: (query: number) => void
+  targetIndex: number
+  queryIndex: number
+  targets: Record[]
+  querys: Record[]
+  onChangeTargetIndex: (index: number) => void
+  onChangeQueryIndex: (index: number) => void
 }
 
 export const Config: React.FC<Props> = ({
@@ -29,12 +30,12 @@ export const Config: React.FC<Props> = ({
   onChangeFreqLow,
   freqUp,
   onChangeFreqUp,
-  targetIds,
-  queryIds,
-  target,
-  query,
-  onChangeTarget,
-  onChangeQuery,
+  targets,
+  querys,
+  targetIndex,
+  queryIndex,
+  onChangeTargetIndex,
+  onChangeQueryIndex,
 }) => {
   const style = {
     position: 'absolute',
@@ -43,15 +44,25 @@ export const Config: React.FC<Props> = ({
     padding: 10,
     margin: 10,
   } as React.CSSProperties
+  const targetIds = targets.map((record) => record.id)
+  const queryIds = querys.map((record) => record.id)
   return (
     <div style={style}>
       <div>
         target
-        <List items={targetIds} index={target} onChange={onChangeTarget} />
+        <List
+          items={targetIds}
+          index={targetIndex}
+          onChange={onChangeTargetIndex}
+        />
       </div>
       <div>
         query
-        <List items={queryIds} index={query} onChange={onChangeQuery} />
+        <List
+          items={queryIds}
+          index={queryIndex}
+          onChange={onChangeQueryIndex}
+        />
       </div>
       <button onClick={onAdd}>add</button>
       <div>k={k}</div>

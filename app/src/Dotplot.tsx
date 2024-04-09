@@ -50,16 +50,5 @@ export const Dotplot: React.FC<Props> = ({ width, height }) => {
     }
   }, [])
 
-  // useEffect(() => {
-  //   fetch('http://localhost:8080/')
-  //     .then((res)=> res.json())
-  //     .then((json) => {
-  //       console.log('json', json)
-  //     })
-  // }, [])
-  // const generate = () => {
-  //   fetch('http://localhost:8080/generate/')
-  // }
-
   return <canvas ref={ref} width={width} height={height} style={style}></canvas>
 }

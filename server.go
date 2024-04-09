@@ -28,6 +28,19 @@ type Ping struct {
 	Points []Point
 }
 
+type Request struct {
+	X       string `json:"x"`
+	Y       string `json:"y"`
+	XA      int    `json:"xA"`
+	XB      int    `json:"xB"`
+	YA      int    `json:"yA"`
+	YB      int    `json:"yB"`
+	K       int    `json:"k"`
+	FreqLow int    `json:"freqLow"`
+	FreqUp  int    `json:"freqUp"`
+	Scale   int    `json:"scale"`
+}
+
 func pingHandler(w http.ResponseWriter, r *http.Request) {
 	v := r.URL.Query()
 	if v != nil {
@@ -48,13 +61,22 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func generateHandler(w http.ResponseWriter, r *http.Request) {
-	v := r.URL.Query()
-	if v != nil {
-		for key, value := range v {
-			fmt.Println("got", key, value)
-		}
+	body := r.FormValue("json")
+	fmt.Println("generate!", r.Method, r.ContentLength, body)
+
+	var req Request
+	if err := json.Unmarshal([]byte(body), &req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	time.Sleep(5 * time.Second)
+	fmt.Println("requet", req, req.K)
+
+	// v := r.URL.Query()
+	// if v != nil {
+	// 	for key, value := range v {
+	// 		fmt.Println("got", key, value)
+	// 	}
+	// }
+	// time.Sleep(5 * time.Second)
 	ping := Ping{http.StatusOK, "ok", []Point{}}
 	res, err := json.Marshal(ping)
 	if err != nil {
