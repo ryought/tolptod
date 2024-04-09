@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Dotplots } from './Dotplots'
 import { Dotplot } from './Dotplot'
 import { Region } from './TouchPad'
@@ -72,6 +72,7 @@ function App() {
   })
 
   // dotplots
+  const count = useRef<number>(0)
   const [plots, setPlots] = useState<Plot[]>([])
   const requestPlot = () => {
     const scale = Math.ceil(region.scale)
@@ -115,8 +116,16 @@ function App() {
       scale,
       width,
       height,
-      el: <Dotplot width={width} height={height} points={points} />,
+      el: (
+        <Dotplot
+          key={count.current}
+          width={width}
+          height={height}
+          points={points}
+        />
+      ),
     }
+    count.current += 1
     setPlots((plots) => {
       if (plots.length > 0) {
         const ret = [plots[plots.length - 1], plot]
