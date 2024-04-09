@@ -78,6 +78,7 @@ export const Config: React.FC<Props> = ({
       />
       <div>cx={region.center.x.toFixed(0)}</div>
       <div>cy={region.center.y.toFixed(0)}</div>
+      <div>scale={region.scale.toFixed(3)}</div>
     </div>
   )
 }

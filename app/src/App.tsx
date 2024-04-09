@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Dotplots } from './Dotplots'
-import { Dotplot, Plot } from './Dotplot'
+import { Dotplot } from './Dotplot'
 import { Region } from './TouchPad'
 import { Config } from './Config'
 
@@ -23,6 +23,15 @@ export interface Request {
   freqUp: number
   // bp per px
   scale: number
+}
+
+export type Plot = {
+  x: number
+  y: number
+  scale: number
+  width: number
+  height: number
+  el: JSX.Element
 }
 
 function App() {
@@ -56,6 +65,7 @@ function App() {
 
   // touchpad related
   const [size, setSize] = useState({ width: 0, height: 0 })
+  const { width, height } = size
   const [region, setRegion] = useState<Region>({
     center: { x: 0, y: 0 },
     scale: 1,
@@ -64,13 +74,22 @@ function App() {
   // dotplots
   const [plots, setPlots] = useState<Plot[]>([])
   const requestPlot = () => {
+    const scale = Math.ceil(region.scale)
+    const xA = Math.round(region.center.x - (width * region.scale) / 2)
+    const xB = Math.round(region.center.x + (width * region.scale) / 2)
+    const yA = Math.round(region.center.y - (height * region.scale) / 2)
+    const yB = Math.round(region.center.y + (height * region.scale) / 2)
     const request = {
       x: targets[targetIndex].id,
       y: querys[queryIndex].id,
+      xA,
+      xB,
+      yA,
+      yB,
       k,
       freqLow,
       freqUp,
-      // scale,
+      scale,
     }
     const data = new FormData()
     data.append('json', JSON.stringify(request))
@@ -81,22 +100,30 @@ function App() {
     })
       .then((res) => res.json())
       .then((json) => {
-        console.log('return!', json)
+        const points = json.points as [number, number][]
+        console.log('return!', points)
+        addPlot(request, points)
       })
   }
-  const addPlot = () => {
+  const addPlot = (req: Request, points: [number, number][]) => {
+    const { xA, xB, yA, yB, scale } = req
+    const width = Math.ceil((xB - xA) / scale)
+    const height = Math.ceil((yB - yA) / scale)
     const plot = {
-      x: region.center.x - (size.width / 2) * region.scale,
-      y: region.center.y - (size.height / 2) * region.scale,
-      scale: region.scale,
-      width: size.width,
-      height: size.height,
-      el: <Dotplot width={size.width} height={size.height} />,
+      x: xA,
+      y: yA,
+      scale,
+      width,
+      height,
+      el: <Dotplot width={width} height={height} points={points} />,
     }
     setPlots((plots) => {
-      const ret = [...plots.slice(-2), plot]
-      console.log('ret', ret)
-      return ret
+      if (plots.length > 0) {
+        const ret = [plots[plots.length - 1], plot]
+        return ret
+      } else {
+        return [plot]
+      }
     })
   }
 

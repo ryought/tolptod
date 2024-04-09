@@ -38,7 +38,7 @@ type Point struct {
 	Y int
 }
 
-func (p Point) MarshalText() ([]byte, error) {
+func (p Point) MarshalJSON() ([]byte, error) {
 	s := fmt.Sprintf("[%d,%d]", p.X, p.Y)
 	return []byte(s), nil
 }

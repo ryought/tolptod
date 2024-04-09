@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { TouchPad, Region } from './TouchPad'
 import { TickBar } from './TickBar'
-import { Plot } from './Dotplot'
+import { Plot } from './App'
 
 type Props = {
   region: Region

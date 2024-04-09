@@ -25,7 +25,12 @@ func search() {
 type Ping struct {
 	Status int    `json:"status"`
 	Result string `json:"result"`
-	Points []Point
+}
+
+type Plot struct {
+	Status int     `json:"status"`
+	Result string  `json:"result"`
+	Points []Point `json:"points"`
 }
 
 type Request struct {
@@ -49,7 +54,7 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	time.Sleep(5 * time.Second)
-	ping := Ping{http.StatusOK, "ok", []Point{}}
+	ping := Ping{http.StatusOK, "ok"}
 	res, err := json.Marshal(ping)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -70,15 +75,14 @@ func generateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println("requet", req, req.K)
 
-	// v := r.URL.Query()
-	// if v != nil {
-	// 	for key, value := range v {
-	// 		fmt.Println("got", key, value)
-	// 	}
-	// }
-	// time.Sleep(5 * time.Second)
-	ping := Ping{http.StatusOK, "ok", []Point{}}
-	res, err := json.Marshal(ping)
+	points := []Point{
+		{X: 0, Y: 0},
+		{X: 1, Y: 1},
+		{X: 2, Y: 2},
+	}
+	plot := Plot{http.StatusOK, "ok", points}
+
+	res, err := json.Marshal(plot)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

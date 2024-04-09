@@ -6,25 +6,18 @@ type Props = {
   points?: [number, number][]
 }
 
-export type Plot = {
-  x: number
-  y: number
-  scale: number
-  width: number
-  height: number
-  el: JSX.Element
-}
-
-export const Dotplot: React.FC<Props> = ({ width, height }) => {
+export const Dotplot: React.FC<Props> = ({ width, height, points = [] }) => {
   const ref = useRef<HTMLCanvasElement>(null)
   const style = {
     background: 'white',
     opacity: 0.7,
     width: '100%',
     height: '100%',
+    imageRendering: 'pixelated',
+    // image-rendering: crisp-edges;
   } as React.CSSProperties
 
-  console.log('dotplot')
+  console.log('dotplot', width, height)
 
   // draw wave to canvas
   useEffect(() => {
@@ -40,9 +33,9 @@ export const Dotplot: React.FC<Props> = ({ width, height }) => {
     ctx.clearRect(0, 0, width, height)
     ctx.fillStyle = 'rgba(0,255,255,0.5)'
 
-    console.log('draw!')
-    for (let i = 0; i < Math.min(width, height); i++) {
-      ctx.fillRect(i, i, 1, 1)
+    console.log('drawing..')
+    for (const point of points) {
+      ctx.fillRect(point[0], point[1], 1, 1)
     }
 
     return () => {
