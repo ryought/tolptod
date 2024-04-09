@@ -31,7 +31,8 @@ export const Dotplot: React.FC<Props> = ({ width, height, points = [] }) => {
 
     // reset canvas
     ctx.clearRect(0, 0, width, height)
-    ctx.fillStyle = 'rgba(0,255,255,0.5)'
+    // ctx.fillStyle = 'rgba(0,255,255,0.5)'
+    ctx.fillStyle = 'red'
 
     console.log('drawing..')
     for (const point of points) {

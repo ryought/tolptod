@@ -55,6 +55,7 @@ export const Config: React.FC<Props> = ({
           index={targetIndex}
           onChange={onChangeTargetIndex}
         />
+        len={targets[targetIndex]?.len}
       </div>
       <div>
         query
@@ -63,6 +64,7 @@ export const Config: React.FC<Props> = ({
           index={queryIndex}
           onChange={onChangeQueryIndex}
         />
+        len={querys[queryIndex]?.len}
       </div>
       <button onClick={onAdd}>add</button>
       <div>k={k}</div>

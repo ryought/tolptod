@@ -5,6 +5,7 @@ import (
 	// "flag"
 	"fmt"
 	// "html/template"
+	"index/suffixarray"
 )
 
 type Info struct {
@@ -51,8 +52,58 @@ func pointJsonTest() {
 	fmt.Println(p, string(s), err)
 }
 
-func FindMatch() []Point {
-	// create suffix array
+type Matrix struct {
+	X int
+	Y int
+	m []bool
+}
+
+func NewMatrix(X int, Y int) Matrix {
+	m := make([]bool, X*Y)
+	return Matrix{X, Y, m}
+}
+
+func (m Matrix) Set(x int, y int, v bool) {
+	if x < 0 || x >= m.X {
+		fmt.Println("x out of range", x, m.X)
+	}
+	if y < 0 || y >= m.Y {
+		fmt.Println("y out of range", y, m.Y)
+	}
+	m.m[x*m.Y+y] = v
+}
+
+func (m Matrix) Get(x int, y int) bool {
+	return m.m[x*m.Y+y]
+}
+func (m Matrix) Drain() []Point {
 	points := make([]Point, 0)
+	for X := 0; X < m.X; X++ {
+		for Y := 0; Y < m.Y; Y++ {
+			if m.Get(X, Y) {
+				points = append(points, Point{X, Y})
+			}
+		}
+	}
+	return points
+}
+
+func FindMatch(x []byte, y []byte, scale int, k int) []Point {
+	// create suffix array
+	index := suffixarray.New(x)
+
+	nx := len(x)/scale + 1
+	ny := len(y)/scale + 1
+
+	m := NewMatrix(nx, ny)
+
+	for j := 0; j < len(y)-k; j++ {
+		offsets := index.Lookup(y[j:j+k], -1)
+		for _, i := range offsets {
+			m.Set(i/scale, j/scale, true)
+		}
+	}
+	points := m.Drain()
+
 	return points
 }

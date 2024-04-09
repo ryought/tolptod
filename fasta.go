@@ -59,7 +59,9 @@ func Parse(f io.Reader) ([]Record, error) {
 			}
 
 			// store new id
-			id = bytes.Fields(line[1:])[0]
+			seg := bytes.Fields(line[1:])[0]
+			id = make([]byte, len(seg))
+			copy(id, seg)
 			seq = nil
 		} else {
 			line = bytes.ToUpper(line)
@@ -81,6 +83,6 @@ func ParseFile(filename string) ([]Record, error) {
 
 func PrintRecords(records []Record) {
 	for i, record := range records {
-		fmt.Println("record", i, string(record.Seq), string(record.ID))
+		fmt.Println("record", i, string(record.ID), len(record.Seq))
 	}
 }

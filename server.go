@@ -5,22 +5,11 @@ import (
 	// "flag"
 	"fmt"
 	// "html/template"
-	"index/suffixarray"
 	"log"
 	"net/http"
 	"os"
 	"time"
 )
-
-func search() {
-	data := []byte("hogehogehoge")
-	index := suffixarray.New(data)
-	q := []byte("hoge")
-	offsets := index.Lookup(q, -1)
-	for i, offset := range offsets {
-		fmt.Printf("found: %d %d\n", i, offset)
-	}
-}
 
 type Ping struct {
 	Status int    `json:"status"`
@@ -34,16 +23,16 @@ type Plot struct {
 }
 
 type Request struct {
-	X       string `json:"x"`
-	Y       string `json:"y"`
-	XA      int    `json:"xA"`
-	XB      int    `json:"xB"`
-	YA      int    `json:"yA"`
-	YB      int    `json:"yB"`
-	K       int    `json:"k"`
-	FreqLow int    `json:"freqLow"`
-	FreqUp  int    `json:"freqUp"`
-	Scale   int    `json:"scale"`
+	X       int `json:"x"`
+	Y       int `json:"y"`
+	XA      int `json:"xA"`
+	XB      int `json:"xB"`
+	YA      int `json:"yA"`
+	YB      int `json:"yB"`
+	K       int `json:"k"`
+	FreqLow int `json:"freqLow"`
+	FreqUp  int `json:"freqUp"`
+	Scale   int `json:"scale"`
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
@@ -65,31 +54,32 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func generateHandler(w http.ResponseWriter, r *http.Request) {
-	body := r.FormValue("json")
-	fmt.Println("generate!", r.Method, r.ContentLength, body)
+func createGenerateHandler(xrs []Record, yrs []Record) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := r.FormValue("json")
+		var req Request
+		if err := json.Unmarshal([]byte(body), &req); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
-	var req Request
-	if err := json.Unmarshal([]byte(body), &req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	fmt.Println("requet", req, req.K)
+		fmt.Println("requeted..", req, req.K)
+		points := FindMatch(xrs[req.X].Seq[req.XA:req.XB], yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K)
+		// points := []Point{
+		// 	{X: 0, Y: 0},
+		// 	{X: 1, Y: 1},
+		// 	{X: 2, Y: 2},
+		// }
+		plot := Plot{http.StatusOK, "ok", points}
 
-	points := []Point{
-		{X: 0, Y: 0},
-		{X: 1, Y: 1},
-		{X: 2, Y: 2},
+		res, err := json.Marshal(plot)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Write(res)
 	}
-	plot := Plot{http.StatusOK, "ok", points}
-
-	res, err := json.Marshal(plot)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Write(res)
 }
 
 func createInfoHandler(info Info) http.HandlerFunc {
@@ -131,8 +121,9 @@ func main() {
 	// http.HandleFunc("/edit/", editHandler)
 	// http.HandleFunc("/save/", saveHandler)
 	http.HandleFunc("/", createInfoHandler(info))
-	http.HandleFunc("/generate/", generateHandler)
+	http.HandleFunc("/generate/", createGenerateHandler(xrs, yrs))
 	http.HandleFunc("/ping/", pingHandler)
 
+	fmt.Println("running..")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

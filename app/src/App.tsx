@@ -9,10 +9,14 @@ export interface Record {
   len: number
 }
 
+export const clamp = (x: number, min: number, max: number) => {
+  return Math.min(Math.max(x, min), max)
+}
+
 export interface Request {
   // regions
-  x: string
-  y: string
+  x: number
+  y: number
   xA: number
   xB: number
   yA: number
@@ -47,6 +51,8 @@ function App() {
   const [targets, setTargets] = useState<Record[]>([])
   const [queryIndex, setQueryIndex] = useState<number>(0)
   const [targetIndex, setTargetIndex] = useState<number>(0)
+  const queryLen = querys[queryIndex]?.len || 0
+  const targetLen = targets[targetIndex]?.len || 0
 
   useEffect(() => {
     // load query/target ids from api
@@ -56,6 +62,7 @@ function App() {
         setTargets(json['xs'] as Record[])
         setQuerys(json['ys'] as Record[])
       })
+      .catch(() => alert('cannot get info'))
   }, [])
 
   // k-mer related
@@ -76,13 +83,29 @@ function App() {
   const [plots, setPlots] = useState<Plot[]>([])
   const requestPlot = () => {
     const scale = Math.ceil(region.scale)
-    const xA = Math.round(region.center.x - (width * region.scale) / 2)
-    const xB = Math.round(region.center.x + (width * region.scale) / 2)
-    const yA = Math.round(region.center.y - (height * region.scale) / 2)
-    const yB = Math.round(region.center.y + (height * region.scale) / 2)
+    const xA = clamp(
+      Math.round(region.center.x - (width * region.scale) / 2),
+      0,
+      targetLen
+    )
+    const xB = clamp(
+      Math.round(region.center.x + (width * region.scale) / 2),
+      0,
+      targetLen
+    )
+    const yA = clamp(
+      Math.round(region.center.y - (height * region.scale) / 2),
+      0,
+      queryLen
+    )
+    const yB = clamp(
+      Math.round(region.center.y + (height * region.scale) / 2),
+      0,
+      queryLen
+    )
     const request = {
-      x: targets[targetIndex].id,
-      y: querys[queryIndex].id,
+      x: targetIndex,
+      y: queryIndex,
       xA,
       xB,
       yA,
@@ -102,15 +125,15 @@ function App() {
       .then((res) => res.json())
       .then((json) => {
         const points = json.points as [number, number][]
-        console.log('return!', points)
         addPlot(request, points)
       })
+      .catch(() => alert('cannot /generate'))
   }
   const addPlot = (req: Request, points: [number, number][]) => {
     const { xA, xB, yA, yB, scale } = req
     const width = Math.ceil((xB - xA) / scale)
     const height = Math.ceil((yB - yA) / scale)
-    const plot = {
+    const plot: Plot = {
       x: xA,
       y: yA,
       scale,
@@ -160,6 +183,7 @@ function App() {
         region={region}
         onChangeRegion={setRegion}
         onSizeChange={setSize}
+        onTouchEnd={requestPlot}
         plots={plots}
       />
     </main>
