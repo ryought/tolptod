@@ -88,19 +88,39 @@ func (m Matrix) Drain() []Point {
 	return points
 }
 
-func FindMatch(x []byte, y []byte, scale int, k int) []Point {
-	// create suffix array
-	index := suffixarray.New(x)
+func BuildIndexes(records []Record) []suffixarray.Index {
+	indexes := make([]suffixarray.Index, len(records))
+	for i, record := range records {
+		// create suffix array
+		indexes[i] = *suffixarray.New(record.Seq)
+	}
+	return indexes
+}
 
-	nx := len(x)/scale + 1
+func FindMatch(x suffixarray.Index, xa int, xb int, y []byte, scale int, k int, freqLow int, freqUp int) []Point {
+	nx := (xb-xa)/scale + 1
 	ny := len(y)/scale + 1
-
 	m := NewMatrix(nx, ny)
 
 	for j := 0; j < len(y)-k; j++ {
-		offsets := index.Lookup(y[j:j+k], -1)
+		kmer := y[j : j+k]
+		offsets := x.Lookup(kmer, -1)
+
+		count := 0
 		for _, i := range offsets {
-			m.Set(i/scale, j/scale, true)
+			if xa <= i && i < xb {
+				count += 1
+			}
+		}
+
+		// this k-mer satisfies the freq restriction.
+		if freqLow <= count && count <= freqUp {
+			// fill the cells
+			for _, i := range offsets {
+				if xa <= i && i < xb {
+					m.Set((i-xa)/scale, j/scale, true)
+				}
+			}
 		}
 	}
 	points := m.Drain()

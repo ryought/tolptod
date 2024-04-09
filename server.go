@@ -5,6 +5,7 @@ import (
 	// "flag"
 	"fmt"
 	// "html/template"
+	"index/suffixarray"
 	"log"
 	"net/http"
 	"os"
@@ -54,7 +55,7 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func createGenerateHandler(xrs []Record, yrs []Record) http.HandlerFunc {
+func createGenerateHandler(xis []suffixarray.Index, yrs []Record) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body := r.FormValue("json")
 		var req Request
@@ -63,12 +64,7 @@ func createGenerateHandler(xrs []Record, yrs []Record) http.HandlerFunc {
 		}
 
 		fmt.Println("requeted..", req, req.K)
-		points := FindMatch(xrs[req.X].Seq[req.XA:req.XB], yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K)
-		// points := []Point{
-		// 	{X: 0, Y: 0},
-		// 	{X: 1, Y: 1},
-		// 	{X: 2, Y: 2},
-		// }
+		points := FindMatch(xis[req.X], req.XA, req.XB, yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K, req.FreqLow, req.FreqUp)
 		plot := Plot{http.StatusOK, "ok", points}
 
 		res, err := json.Marshal(plot)
@@ -111,19 +107,15 @@ func main() {
 	}
 	PrintRecords(xrs)
 	PrintRecords(yrs)
-
+	fmt.Println("building suffix array..")
+	indexes := BuildIndexes(xrs)
+	fmt.Println("done!")
 	info := toInfo(xrs, yrs)
 
-	// pointJsonTest()
-	// search()
-	// http.HandleFunc("/", handler)
-	// http.HandleFunc("/view/", viewHandler)
-	// http.HandleFunc("/edit/", editHandler)
-	// http.HandleFunc("/save/", saveHandler)
 	http.HandleFunc("/", createInfoHandler(info))
-	http.HandleFunc("/generate/", createGenerateHandler(xrs, yrs))
+	http.HandleFunc("/generate/", createGenerateHandler(indexes, yrs))
 	http.HandleFunc("/ping/", pingHandler)
 
-	fmt.Println("running..")
+	fmt.Println("server running on 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
