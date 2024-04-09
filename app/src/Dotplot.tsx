@@ -44,6 +44,10 @@ export const Dotplot: React.FC<Props> = ({ width, height }) => {
     for (let i = 0; i < Math.min(width, height); i++) {
       ctx.fillRect(i, i, 1, 1)
     }
+
+    return () => {
+      console.log('removing')
+    }
   }, [])
 
   // useEffect(() => {
