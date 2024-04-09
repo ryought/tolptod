@@ -102,9 +102,3 @@ func ParseFile(filename string) ([]Record, error) {
 	defer f.Close()
 	return Parse(f)
 }
-
-func PrintRecords(records []Record) {
-	for i, record := range records {
-		fmt.Println("record", i, string(record.ID), len(record.Seq))
-	}
-}
