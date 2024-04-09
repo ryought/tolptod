@@ -22,6 +22,28 @@ func IsDNA(b []byte) bool {
 	return true
 }
 
+func RevComp(b []byte) []byte {
+	n := len(b)
+	ret := make([]byte, n)
+	for i := range b {
+		switch b[n-i-1] {
+		case 'A':
+			ret[i] = 'T'
+		case 'T':
+			ret[i] = 'A'
+		case 'C':
+			ret[i] = 'G'
+		case 'G':
+			ret[i] = 'C'
+		case 'N':
+			ret[i] = 'N'
+		default:
+			panic("non dna string")
+		}
+	}
+	return ret
+}
+
 func Parse(f io.Reader) ([]Record, error) {
 	records := make([]Record, 0)
 	r := bufio.NewReader(f)

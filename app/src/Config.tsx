@@ -1,10 +1,17 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Region } from './TouchPad'
-import { Record } from './App'
+import { Record, Plot } from './App'
 
 type Props = {
   region: Region
   onAdd: () => void
+  onSave: () => void
+  live: boolean
+  onChangeLive: (live: boolean) => void
+  plots: Plot[]
+  onChangePlots: (plots: Plot[]) => void
+  color: string
+  onChangeColor: (color: string) => void
   // k-mer related
   k: number
   onChangeK: (k: number) => void
@@ -12,6 +19,8 @@ type Props = {
   onChangeFreqLow: (f: number) => void
   freqUp: number
   onChangeFreqUp: (f: number) => void
+  revcomp: boolean
+  onChangeRevcomp: (revcomp: boolean) => void
   // Id related
   targetIndex: number
   queryIndex: number
@@ -24,12 +33,21 @@ type Props = {
 export const Config: React.FC<Props> = ({
   region,
   onAdd,
+  onSave,
+  live,
+  onChangeLive,
+  plots,
+  onChangePlots,
+  color,
+  onChangeColor,
   k,
   onChangeK,
   freqLow,
   onChangeFreqLow,
   freqUp,
   onChangeFreqUp,
+  revcomp,
+  onChangeRevcomp,
   targets,
   querys,
   targetIndex,
@@ -51,7 +69,7 @@ export const Config: React.FC<Props> = ({
   return (
     <div style={style}>
       <div>
-        target
+        x(target)=
         <List
           items={targetIds}
           index={targetIndex}
@@ -60,7 +78,7 @@ export const Config: React.FC<Props> = ({
         len={targets[targetIndex]?.len}
       </div>
       <div>
-        query
+        y(query)=
         <List
           items={queryIds}
           index={queryIndex}
@@ -69,6 +87,8 @@ export const Config: React.FC<Props> = ({
         len={querys[queryIndex]?.len}
       </div>
       <button onClick={onAdd}>add</button>
+      live
+      <CheckBox value={live} onChange={onChangeLive} />
       <div>k={k}</div>
       <Slider value={k} onChange={onChangeK} min={1} max={100} />
       <div>freqLow={freqLow}</div>
@@ -80,9 +100,49 @@ export const Config: React.FC<Props> = ({
         min={freqLow}
         max={100}
       />
+      <div>
+        match revcomp
+        <CheckBox value={revcomp} onChange={onChangeRevcomp} />
+      </div>
       <div>cx={region.center.x.toFixed(0)}</div>
       <div>cy={region.center.y.toFixed(0)}</div>
       <div>scale={region.scale.toFixed(3)}</div>
+      <div>
+        <input
+          type="color"
+          value={color}
+          onChange={(e) => onChangeColor(e.target.value)}
+        />
+      </div>
+      <button onClick={onSave}>save</button>
+      {plots.map((plot, i) => {
+        return (
+          <div key={plot.key}>
+            Plot#{i}
+            <CheckBox
+              value={plot.active}
+              onChange={(active) => {
+                const newPlots = [...plots]
+                const newPlot: Plot = {
+                  ...plot,
+                  active,
+                }
+                newPlots[i] = newPlot
+                onChangePlots(newPlots)
+              }}
+            />
+            <button
+              onClick={() => {
+                const newPlots = [...plots]
+                newPlots.splice(i, 1)
+                onChangePlots(newPlots)
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -157,5 +217,47 @@ export const List: React.FC<ListProps> = ({ items, index, onChange }) => {
         </option>
       ))}
     </select>
+  )
+}
+
+type NumInputProps = {
+  value: number
+  min: number
+  max: number
+  step?: number
+  onChange: (value: number) => void
+}
+
+export const NumInput: React.FC<NumInputProps> = ({
+  value,
+  onChange,
+  min,
+  max,
+  step,
+}) => {
+  return (
+    <input
+      type="range"
+      min={min}
+      max={max}
+      step={step ?? 1}
+      value={value}
+      onChange={(e) => onChange(parseFloat(e.target.value))}
+    />
+  )
+}
+
+type CheckBoxProps = {
+  value: boolean
+  onChange: (value: boolean) => void
+}
+
+const CheckBox: React.FC<CheckBoxProps> = ({ value, onChange }) => {
+  return (
+    <input
+      type="checkbox"
+      checked={value}
+      onChange={(e) => onChange(e.target.checked)}
+    />
   )
 }

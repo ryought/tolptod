@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	// "fmt"
 	"strings"
 	"testing"
 )
@@ -66,5 +65,17 @@ func TestParseFasta(t *testing.T) {
 		if !bytes.Equal(expected[i].Seq, records[i].Seq) {
 			t.Errorf("Seq is different")
 		}
+	}
+}
+
+func TestRevComp(t *testing.T) {
+	if !bytes.Equal(RevComp([]byte("ATCGGTA")), []byte("TACCGAT")) {
+		t.Errorf("different")
+	}
+	if !bytes.Equal(RevComp([]byte("A")), []byte("T")) {
+		t.Errorf("different")
+	}
+	if !bytes.Equal(RevComp([]byte("")), []byte("")) {
+		t.Errorf("different")
 	}
 }

@@ -4,13 +4,19 @@ type Props = {
   width?: number
   height?: number
   points?: [number, number][]
+  color?: string
 }
 
-export const Dotplot: React.FC<Props> = ({ width, height, points = [] }) => {
+export const Dotplot: React.FC<Props> = ({
+  width,
+  height,
+  points = [],
+  color = '#FF0000',
+}) => {
   const ref = useRef<HTMLCanvasElement>(null)
   const style = {
     background: 'white',
-    // opacity: 0.7,
+    opacity: 0.7,
     width: '100%',
     height: '100%',
     imageRendering: 'pixelated',
@@ -31,8 +37,7 @@ export const Dotplot: React.FC<Props> = ({ width, height, points = [] }) => {
 
     // reset canvas
     ctx.clearRect(0, 0, width, height)
-    // ctx.fillStyle = 'rgba(0,255,255,0.5)'
-    ctx.fillStyle = 'red'
+    ctx.fillStyle = color
 
     console.log('drawing..')
     for (const point of points) {

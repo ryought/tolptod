@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Dotplots } from './Dotplots'
 import { Dotplot } from './Dotplot'
 import { Region } from './TouchPad'
@@ -23,16 +23,19 @@ export interface Request {
   k: number
   freqLow: number
   freqUp: number
+  revcomp: boolean
   // bp per px
   scale: number
 }
 
 export type Plot = {
+  key: number
   x: number
   y: number
   scale: number
   width: number
   height: number
+  active: boolean
   el: JSX.Element
 }
 
@@ -65,8 +68,9 @@ function App() {
 
   // k-mer related
   const [k, setK] = useState(16)
-  const [freqLow, setFreqLow] = useState(0)
-  const [freqUp, setFreqUp] = useState(10)
+  const [freqLow, setFreqLow] = useState(1)
+  const [freqUp, setFreqUp] = useState(50)
+  const [revcomp, setRevcomp] = useState<boolean>(false)
 
   // touchpad related
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -77,7 +81,10 @@ function App() {
   })
 
   // dotplots
+  const [color, setColor] = useState<string>('#FF0000')
   const count = useRef<number>(0)
+  const [live, setLive] = useState<boolean>(true)
+  const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
   const [plots, setPlots] = useState<Plot[]>([])
   const requestPlot = () => {
     const scale = Math.ceil(region.scale)
@@ -101,7 +108,7 @@ function App() {
       0,
       queryLen
     )
-    const request = {
+    const request: Request = {
       x: targetIndex,
       y: queryIndex,
       xA,
@@ -111,6 +118,7 @@ function App() {
       k,
       freqLow,
       freqUp,
+      revcomp,
       scale,
     }
     const data = new FormData()
@@ -132,36 +140,37 @@ function App() {
     const width = Math.ceil((xB - xA) / scale)
     const height = Math.ceil((yB - yA) / scale)
     const plot: Plot = {
+      key: count.current,
       x: xA,
       y: yA,
       scale,
       width,
       height,
+      active: true, // new plot is always active
       el: (
         <Dotplot
           key={count.current}
           width={width}
           height={height}
           points={points}
+          color={color}
         />
       ),
     }
     count.current += 1
-    setPlots((plots) => {
-      // if (plots.length > 0) {
-      //   const ret = [plots[plots.length - 1], plot]
-      //   return ret
-      // } else {
-      //   return [plot]
-      // }
-      return [plot]
-    })
+    setCurrentPlot(plot)
+  }
+  const savePlot = () => {
+    if (currentPlot) {
+      setPlots((plot) => [...plot, currentPlot])
+      setCurrentPlot(null)
+    }
   }
 
   const debounced = useDebounce(requestPlot)
   useEffect(() => {
-    debounced()
-  }, [region, queryIndex, targetIndex, k, freqLow, freqUp])
+    if (live) debounced()
+  }, [live, region, queryIndex, targetIndex, k, freqLow, freqUp, color])
 
   return (
     <main style={style}>
@@ -175,6 +184,12 @@ function App() {
         onChangeFreqLow={setFreqLow}
         freqUp={freqUp}
         onChangeFreqUp={setFreqUp}
+        // color
+        color={color}
+        onChangeColor={setColor}
+        // revcomp
+        revcomp={revcomp}
+        onChangeRevcomp={setRevcomp}
         // Id related
         targets={targets}
         querys={querys}
@@ -182,12 +197,18 @@ function App() {
         queryIndex={queryIndex}
         onChangeTargetIndex={setTargetIndex}
         onChangeQueryIndex={setQueryIndex}
+        // save related
+        onSave={savePlot}
+        live={live}
+        onChangeLive={setLive}
+        plots={plots}
+        onChangePlots={setPlots}
       />
       <Dotplots
         region={region}
         onChangeRegion={setRegion}
         onSizeChange={setSize}
-        plots={plots}
+        plots={currentPlot ? [...plots, currentPlot] : plots}
       />
     </main>
   )

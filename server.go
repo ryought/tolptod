@@ -24,16 +24,17 @@ type Plot struct {
 }
 
 type Request struct {
-	X       int `json:"x"`
-	Y       int `json:"y"`
-	XA      int `json:"xA"`
-	XB      int `json:"xB"`
-	YA      int `json:"yA"`
-	YB      int `json:"yB"`
-	K       int `json:"k"`
-	FreqLow int `json:"freqLow"`
-	FreqUp  int `json:"freqUp"`
-	Scale   int `json:"scale"`
+	X       int  `json:"x"`
+	Y       int  `json:"y"`
+	XA      int  `json:"xA"`
+	XB      int  `json:"xB"`
+	YA      int  `json:"yA"`
+	YB      int  `json:"yB"`
+	K       int  `json:"k"`
+	FreqLow int  `json:"freqLow"`
+	FreqUp  int  `json:"freqUp"`
+	Scale   int  `json:"scale"`
+	Revcomp bool `json:"revcomp"`
 }
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +65,7 @@ func createGenerateHandler(xis []suffixarray.Index, yrs []Record) http.HandlerFu
 		}
 
 		fmt.Println("requeted..", req, req.K)
-		points := FindMatch(xis[req.X], req.XA, req.XB, yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K, req.FreqLow, req.FreqUp)
+		points := FindMatch(xis[req.X], req.XA, req.XB, yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K, req.FreqLow, req.FreqUp, req.Revcomp)
 		plot := Plot{http.StatusOK, "ok", points}
 
 		res, err := json.Marshal(plot)

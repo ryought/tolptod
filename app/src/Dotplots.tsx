@@ -36,20 +36,22 @@ export const Dotplots: React.FC<Props> = ({
     >
       <TickBar direction="x" center={region.center.x} scale={region.scale} />
       <TickBar direction="y" center={region.center.y} scale={region.scale} />
-      {plots.map((plot, i) => {
-        const style: React.CSSProperties = {
-          position: 'absolute',
-          left: size.width / 2 + (plot.x - region.center.x) / region.scale,
-          top: size.height / 2 + (plot.y - region.center.y) / region.scale,
-          width: (plot.width * plot.scale) / region.scale,
-          height: (plot.height * plot.scale) / region.scale,
-        }
-        return (
-          <div key={i} style={style}>
-            {plot.el}
-          </div>
-        )
-      })}
+      {plots
+        .filter((plot) => plot.active)
+        .map((plot, i) => {
+          const style: React.CSSProperties = {
+            position: 'absolute',
+            left: size.width / 2 + (plot.x - region.center.x) / region.scale,
+            top: size.height / 2 + (plot.y - region.center.y) / region.scale,
+            width: (plot.width * plot.scale) / region.scale,
+            height: (plot.height * plot.scale) / region.scale,
+          }
+          return (
+            <div key={i} style={style}>
+              {plot.el}
+            </div>
+          )
+        })}
     </TouchPad>
   )
 }

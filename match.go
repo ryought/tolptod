@@ -97,13 +97,16 @@ func BuildIndexes(records []Record) []suffixarray.Index {
 	return indexes
 }
 
-func FindMatch(x suffixarray.Index, xa int, xb int, y []byte, scale int, k int, freqLow int, freqUp int) []Point {
+func FindMatch(x suffixarray.Index, xa int, xb int, y []byte, scale int, k int, freqLow int, freqUp int, revcomp bool) []Point {
 	nx := (xb-xa)/scale + 1
 	ny := len(y)/scale + 1
 	m := NewMatrix(nx, ny)
 
 	for j := 0; j < len(y)-k; j++ {
 		kmer := y[j : j+k]
+		if revcomp {
+			kmer = RevComp(kmer)
+		}
 		offsets := x.Lookup(kmer, -1)
 
 		count := 0
