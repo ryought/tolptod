@@ -54,10 +54,11 @@ function App() {
   const [targetIndex, setTargetIndex] = useState<number>(0)
   const queryLen = querys[queryIndex]?.len || 0
   const targetLen = targets[targetIndex]?.len || 0
+  const isDev = import.meta.env.MODE === 'development'
 
   useEffect(() => {
     // load query/target ids from api
-    fetch('http://localhost:8080/')
+    fetch(isDev ? 'http://localhost:8080/info/' : 'info/')
       .then((res) => res.json())
       .then((json) => {
         setTargets(json['xs'] as Record[])
@@ -124,7 +125,7 @@ function App() {
     const data = new FormData()
     data.append('json', JSON.stringify(request))
     console.log('send', request)
-    fetch('http://localhost:8080/generate/', {
+    fetch(isDev ? 'http://localhost:8080/generate/' : 'generate/', {
       method: 'POST',
       body: data,
     })

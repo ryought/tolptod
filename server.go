@@ -4,11 +4,15 @@ import (
 	"encoding/json"
 	// "flag"
 	// "html/template"
+	_ "embed"
 	"index/suffixarray"
 	"log"
 	"net/http"
 	"os"
 )
+
+//go:embed app/dist/index.html
+var html []byte
 
 type Ping struct {
 	Status int    `json:"status"`
@@ -72,6 +76,11 @@ func createInfoHandler(info Info) http.HandlerFunc {
 	}
 }
 
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("/ requested")
+	w.Write(html)
+}
+
 func main() {
 	if len(os.Args) < 3 {
 		log.Fatalf("Usage: tolptod x.fa y.fa")
@@ -101,7 +110,8 @@ func main() {
 	log.Println("Done")
 	info := toInfo(xrs, yrs)
 
-	http.HandleFunc("/", createInfoHandler(info))
+	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/info/", createInfoHandler(info))
 	http.HandleFunc("/generate/", createGenerateHandler(indexes, yrs))
 
 	log.Println("Server running on 8080...")
