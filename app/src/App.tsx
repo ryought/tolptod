@@ -1,16 +1,14 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Dotplots } from './Dotplots'
 import { Dotplot } from './Dotplot'
 import { Region } from './TouchPad'
 import { Config } from './Config'
+import { useDebounce } from './debounce'
+import { clamp } from './utils'
 
 export interface Record {
   id: string
   len: number
-}
-
-export const clamp = (x: number, min: number, max: number) => {
-  return Math.min(Math.max(x, min), max)
 }
 
 export interface Request {
@@ -150,14 +148,20 @@ function App() {
     }
     count.current += 1
     setPlots((plots) => {
-      if (plots.length > 0) {
-        const ret = [plots[plots.length - 1], plot]
-        return ret
-      } else {
-        return [plot]
-      }
+      // if (plots.length > 0) {
+      //   const ret = [plots[plots.length - 1], plot]
+      //   return ret
+      // } else {
+      //   return [plot]
+      // }
+      return [plot]
     })
   }
+
+  const debounced = useDebounce(requestPlot)
+  useEffect(() => {
+    debounced()
+  }, [region, queryIndex, targetIndex, k, freqLow, freqUp])
 
   return (
     <main style={style}>
@@ -183,7 +187,6 @@ function App() {
         region={region}
         onChangeRegion={setRegion}
         onSizeChange={setSize}
-        onTouchEnd={requestPlot}
         plots={plots}
       />
     </main>

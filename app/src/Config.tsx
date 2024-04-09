@@ -40,6 +40,8 @@ export const Config: React.FC<Props> = ({
   const style = {
     position: 'absolute',
     background: 'white',
+    opacity: 1,
+    border: 'solid',
     zIndex: 100,
     padding: 10,
     margin: 10,

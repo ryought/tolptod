@@ -10,7 +10,7 @@ export const Dotplot: React.FC<Props> = ({ width, height, points = [] }) => {
   const ref = useRef<HTMLCanvasElement>(null)
   const style = {
     background: 'white',
-    opacity: 0.7,
+    // opacity: 0.7,
     width: '100%',
     height: '100%',
     imageRendering: 'pixelated',

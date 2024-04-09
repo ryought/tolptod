@@ -7,7 +7,7 @@ type Props = {
   region: Region
   onChangeRegion: (region: Region) => void
   onSizeChange: (size: { width: number; height: number }) => void
-  onTouchEnd: () => void
+  onTouchEnd?: () => void
   plots: Plot[]
 }
 
@@ -15,7 +15,7 @@ export const Dotplots: React.FC<Props> = ({
   region,
   onChangeRegion,
   onSizeChange,
-  onTouchEnd,
+  onTouchEnd = () => {},
   plots,
 }) => {
   const [size, setSize] = useState({ width: 0, height: 0 })
