@@ -30,6 +30,13 @@ jobs:
         go version
         go get .
     - name: Build
-      run: go build -v ./...
+      run: |
+        go build -v ./...
+        ls -la
     - name: Test
       run: go test -v ./...
+    - name: Upload Go binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: tolptod
+        path: tolptod
