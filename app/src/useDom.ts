@@ -1,5 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { useEventListener } from './event'
+import React, { useEffect, useRef, useState } from 'react'
 
 export function useElementSize<T extends HTMLElement = HTMLDivElement>(): {
   ref: React.RefObject<T>
@@ -16,7 +15,7 @@ export function useElementSize<T extends HTMLElement = HTMLDivElement>(): {
 
 export function useElementWidth<T extends HTMLElement = HTMLDivElement>(): [
   React.RefObject<T>,
-  number
+  number,
 ] {
   const { ref, width } = useElementSize<T>()
   return [ref, width]
@@ -24,7 +23,7 @@ export function useElementWidth<T extends HTMLElement = HTMLDivElement>(): [
 
 export function useImageWidth(): [
   (event: React.SyntheticEvent<HTMLImageElement, Event>) => void,
-  number
+  number,
 ] {
   const [imgWidth, setImgWidth] = useState(0)
   const onImgLoad = (event: React.SyntheticEvent<HTMLImageElement, Event>) => {

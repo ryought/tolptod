@@ -41,13 +41,6 @@ export type Props = {
   onSizeChange?: (size: { width: number; height: number }) => void
 }
 
-const isMovable = (mode: 'x' | 'y' | 'xy') => {
-  return {
-    x: mode == 'x' || mode == 'xy',
-    y: mode == 'y' || mode == 'xy',
-  }
-}
-
 export type Touch = {
   point: Point
   screenPoint: Point
@@ -130,24 +123,7 @@ export const TouchPad: React.FC<Props> = ({
 
   const touches = useRef<Map<number, Touch>>(new Map())
 
-  // TODO
-  const onDebug = (event: PointerEvent<HTMLDivElement>) => {
-    const screenPoint = eventToScreenPoint(event, rect)
-    const point = screenPointToPoint(screenPoint, region, width, height)
-    const { center, scale } = region
-    console.log(
-      event.type,
-      event.pointerId,
-      scale,
-      // event,
-      screenPoint,
-      point,
-      touches.current
-    )
-  }
-
   const onDown = (event: PointerEvent<HTMLDivElement>) => {
-    // onDebug(event)
     if (touches.current.size < 2) {
       const screenPoint = eventToScreenPoint(event, rect)
       const point = screenPointToPoint(screenPoint, region, width, height)
@@ -162,7 +138,6 @@ export const TouchPad: React.FC<Props> = ({
     }
   }
   const onMove = (event: PointerEvent<HTMLDivElement>) => {
-    // onDebug(event)
     const pointerId = event.pointerId
     const screenPoint = eventToScreenPoint(event, rect)
 
@@ -193,8 +168,6 @@ export const TouchPad: React.FC<Props> = ({
     if (onTouchChange) onTouchChange(toTouchList(touches.current))
   }
   const onUp = (event: PointerEvent<HTMLDivElement>) => {
-    // onDebug(event)
-
     touches.current.delete(event.pointerId)
     touches.current.forEach((touch) => {
       // update other touch points
@@ -205,7 +178,6 @@ export const TouchPad: React.FC<Props> = ({
     if (onTouchEnd) onTouchEnd()
   }
   const onWheel = (event: WheelEvent<HTMLDivElement>) => {
-    // onDebug(event)
     const screenPoint = eventToScreenPoint(event, rect)
     const point = screenPointToPoint(screenPoint, region, width, height)
     const scale = region.scale * Math.exp(event.deltaY * 0.01)
