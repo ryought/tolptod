@@ -5,7 +5,7 @@ import (
 	// "flag"
 	"fmt"
 	// "html/template"
-	"index/suffixarray"
+	"github.com/ryought/tolptod/suffixarray"
 )
 
 type Info struct {

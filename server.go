@@ -5,7 +5,7 @@ import (
 	// "flag"
 	// "html/template"
 	_ "embed"
-	"index/suffixarray"
+	"github.com/ryought/tolptod/suffixarray"
 	"log"
 	"net/http"
 	"os"
@@ -87,10 +87,12 @@ func main() {
 	}
 
 	// parse fasta
+	log.Println("Parsing", os.Args[1])
 	xrs, err := ParseFile(os.Args[1])
 	if err != nil {
 		log.Fatalf("ParseFile error: %s", err)
 	}
+	log.Println("Parsing", os.Args[2])
 	yrs, err := ParseFile(os.Args[2])
 	if err != nil {
 		log.Fatalf("ParseFile error: %s", err)
