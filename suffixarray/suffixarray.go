@@ -248,6 +248,30 @@ func (x *Index) lookupAll(s []byte) ints {
 	return x.sa.slice(i, j)
 }
 
+// Find occurrences of s in substring data[a:b] (half-open) (at most n indices)
+func (x *Index) LookupWithin(s []byte, a int, b int, n int) (result []int) {
+	if len(s) > 0 {
+		matches := x.lookupAll(s)
+		count := matches.len()
+		result = make([]int, 0, n)
+		for i := 0; i < count; i++ {
+			var pos int
+			if matches.int32 != nil {
+				pos = int(matches.int32[i])
+			} else {
+				pos = int(matches.int64[i])
+			}
+			if a <= pos && pos < b {
+				result = append(result, pos)
+				if len(result) == n {
+					break
+				}
+			}
+		}
+	}
+	return
+}
+
 // Lookup returns an unsorted list of at most n indices where the byte string s
 // occurs in the indexed data. If n < 0, all occurrences are returned.
 // The result is nil if s is empty, s is not found, or n == 0.

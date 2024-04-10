@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	// "flag"
 	"fmt"
+	// "time"
 	// "html/template"
 	"github.com/ryought/tolptod/suffixarray"
 )
@@ -107,17 +108,14 @@ func FindMatch(x suffixarray.Index, xa int, xb int, y []byte, scale int, k int, 
 		if revcomp {
 			kmer = RevComp(kmer)
 		}
-		offsets := x.Lookup(kmer, -1)
 
-		count := 0
-		for _, i := range offsets {
-			if xa <= i && i < xb {
-				count += 1
-			}
-		}
+		// start := time.Now()
+		offsets := x.LookupWithin(kmer, xa, xb, freqUp+1)
+		// elapsed := time.Now().Sub(start)
+		// fmt.Println("j", j, elapsed.Milliseconds())
 
 		// this k-mer satisfies the freq restriction.
-		if freqLow <= count && count <= freqUp {
+		if freqLow <= len(offsets) && len(offsets) <= freqUp {
 			// fill the cells
 			for _, i := range offsets {
 				if xa <= i && i < xb {

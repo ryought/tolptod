@@ -49,6 +49,7 @@ func createGenerateHandler(xis []suffixarray.Index, yrs []Record) http.HandlerFu
 
 		log.Println("/generate requested", req, req.K)
 		points := FindMatch(xis[req.X], req.XA, req.XB, yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K, req.FreqLow, req.FreqUp, req.Revcomp)
+		log.Println("matching done")
 		plot := Plot{http.StatusOK, "ok", points}
 
 		res, err := json.Marshal(plot)
