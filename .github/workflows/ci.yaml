@@ -35,8 +35,13 @@ jobs:
         ls -la
     - name: Test
       run: go test -v ./...
-    - name: Upload Go binary
-      uses: actions/upload-artifact@v4
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
       with:
-        name: tolptod
-        path: tolptod
+        files: tolptod
+    #- name: Upload Go binary
+    #  uses: actions/upload-artifact@v4
+    #  with:
+    #    name: tolptod
+    #    path: tolptod
