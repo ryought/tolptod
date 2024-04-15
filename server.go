@@ -2,14 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	// "flag"
+	"flag"
+
 	// "html/template"
 	_ "embed"
-	"github.com/ryought/tolptod/fasta"
-	"github.com/ryought/tolptod/suffixarray"
 	"log"
 	"net/http"
-	"os"
+
+	"github.com/ryought/tolptod/fasta"
+	"github.com/ryought/tolptod/suffixarray"
 )
 
 //go:embed app/dist/index.html
@@ -83,19 +84,24 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(html)
 }
 
+var addr = flag.String("b", ":8080", "bind to address:port (default: 0.0.0.0:8080)")
+
 func main() {
-	if len(os.Args) < 3 {
-		log.Fatalf("Usage: tolptod x.fa y.fa")
+	flag.Parse()
+	args := flag.Args()
+
+	if len(args) < 2 {
+		log.Fatalf("Usage: tolptod x.fa y.fa -b localhost:8080")
 	}
 
 	// parse fasta
-	log.Println("Parsing", os.Args[1])
-	xrs, err := fasta.ParseFile(os.Args[1])
+	log.Println("Parsing", args[0])
+	xrs, err := fasta.ParseFile(args[0])
 	if err != nil {
 		log.Fatalf("ParseFile error: %s", err)
 	}
-	log.Println("Parsing", os.Args[2])
-	yrs, err := fasta.ParseFile(os.Args[2])
+	log.Println("Parsing", args[1])
+	yrs, err := fasta.ParseFile(args[1])
 	if err != nil {
 		log.Fatalf("ParseFile error: %s", err)
 	}
@@ -118,6 +124,6 @@ func main() {
 	http.HandleFunc("/info/", createInfoHandler(info))
 	http.HandleFunc("/generate/", createGenerateHandler(indexes, yrs))
 
-	log.Println("Server running on 8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Printf("Server running on %s...", *addr)
+	log.Fatal(http.ListenAndServe(*addr, nil))
 }
