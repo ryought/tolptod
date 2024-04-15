@@ -1,10 +1,11 @@
-package wavelet
+package radix
 
 import (
 	// "bytes"
 	// "strings"
 	// "fmt"
-	// "github.com/ryought/tolptod/fasta"
+	"github.com/ryought/tolptod/rand"
+	"index/suffixarray"
 	"testing"
 	"time"
 )
@@ -27,15 +28,14 @@ func TestRadix(t *testing.T) {
 }
 
 func TestRadixLarge(t *testing.T) {
-	s := RandomDNA(1_000_000)
-	s = append(s, '$')
+	s := rand.RandomByte(1_000_000)
+	// s = append(s, '$')
 	t0 := time.Now()
 	index := RadixSort(s, 40)
 	t.Logf("radix %d ms", time.Since(t0).Milliseconds())
 	if !isSorted(s, index, 40) {
 		t.Error("not sorted")
 	}
-
 	t1 := time.Now()
 	index = Sort(s)
 	t.Logf("sort %d ms", time.Since(t1).Milliseconds())
@@ -43,12 +43,16 @@ func TestRadixLarge(t *testing.T) {
 		t.Error("not sorted")
 	}
 	// printIndex(s, index, 40)
+
+	t2 := time.Now()
+	suffixarray.New(s)
+	t.Logf("suffixarray %d ms", time.Since(t2).Milliseconds())
 }
 
 func BenchmarkRadixLarge(b *testing.B) {
 	// records, _ := fasta.ParseFile("../chr1.fa")
 	// s := records[0].Seq
-	s := RandomDNA(1_000_000) // 1MB
+	s := rand.RandomDNA(1_000_000) // 1MB
 	b.Log("building", len(s))
 	b.StartTimer()
 	RadixSort(s, 40)

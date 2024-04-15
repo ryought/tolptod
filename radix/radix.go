@@ -1,4 +1,4 @@
-package wavelet
+package radix
 
 import (
 	"bytes"
@@ -16,7 +16,8 @@ func NewIndex(n int) []int {
 }
 
 // alphabet size
-const N = 1 << 8
+// const N = 1 << 8
+const N = 4
 
 // workspace reset
 func reset(v [N]int) {
@@ -113,11 +114,11 @@ func RadixSort(s []byte, d int) (index []int) {
 
 		// register new jobs
 		if job.k < d {
-			for c := 1; c < N; c++ {
+			for c := 0; c < N; c++ {
 				if count[c] >= 2 {
 					job := Job{
 						k: job.k + 1,
-						i: job.i + pos[c-1],
+						i: job.i + pos[c] - count[c],
 						j: job.i + pos[c],
 					}
 					queue = append(queue, job)
