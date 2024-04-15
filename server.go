@@ -16,6 +16,12 @@ import (
 //go:embed app/dist/index.html
 var html []byte
 
+// versions injected when build using goreleaser
+var (
+	Version  = "unset"
+	Revision = "unset"
+)
+
 type Ping struct {
 	Status int    `json:"status"`
 	Result string `json:"result"`
@@ -86,13 +92,18 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 
 var addr = flag.String("b", ":8080", "address:port to bind. Default: localhost and port 8080.")
 var help = flag.Bool("h", false, "show help")
+var version = flag.Bool("v", false, "show version")
 
 func main() {
 	flag.Parse()
 	args := flag.Args()
 
+	if *version {
+		log.Printf("%s (%s)", Version, Revision)
+		return
+	}
 	if len(args) < 2 || *help {
-		log.Fatalf("Usage v0.2: tolptod -b localhost:8080 x.fa y.fa")
+		log.Fatalf("Usage %s: tolptod -b localhost:8080 x.fa y.fa", Version)
 	}
 
 	// parse fasta
