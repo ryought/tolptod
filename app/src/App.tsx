@@ -40,13 +40,6 @@ export type Plot = {
 }
 
 function App() {
-  const style = {
-    width: '100vw',
-    height: '100vh',
-    position: 'relative',
-    background: 'gray',
-  } as React.CSSProperties
-
   // sequence names
   const [querys, setQuerys] = useState<Record[]>([])
   const [targets, setTargets] = useState<Record[]>([])
@@ -83,6 +76,7 @@ function App() {
 
   // dotplots
   const [color, setColor] = useState<string>('#FF0000')
+  const [backgroundColor, setBackgroundColor] = useState<string>('#808080')
   const count = useRef<number>(0)
   const [live, setLive] = useState<boolean>(true)
   const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
@@ -173,6 +167,13 @@ function App() {
     if (live) debounced()
   }, [live, region, queryIndex, targetIndex, k, freqLow, freqUp, color])
 
+  const style = {
+    width: '100vw',
+    height: '100vh',
+    position: 'relative',
+    background: backgroundColor,
+  } as React.CSSProperties
+
   return (
     <main style={style}>
       <Config
@@ -188,6 +189,8 @@ function App() {
         // color
         color={color}
         onChangeColor={setColor}
+        backgroundColor={backgroundColor}
+        onChangeBackgroundColor={setBackgroundColor}
         // revcomp
         revcomp={revcomp}
         onChangeRevcomp={setRevcomp}

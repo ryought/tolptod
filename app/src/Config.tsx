@@ -12,6 +12,8 @@ type Props = {
   onChangePlots: (plots: Plot[]) => void
   color: string
   onChangeColor: (color: string) => void
+  backgroundColor: string
+  onChangeBackgroundColor: (color: string) => void
   // k-mer related
   k: number
   onChangeK: (k: number) => void
@@ -40,6 +42,8 @@ export const Config: React.FC<Props> = ({
   onChangePlots,
   color,
   onChangeColor,
+  backgroundColor,
+  onChangeBackgroundColor,
   k,
   onChangeK,
   freqLow,
@@ -115,10 +119,19 @@ export const Config: React.FC<Props> = ({
         <div>cy={region.center.y.toFixed(0)}</div>
         <div>scale={region.scale.toFixed(3)}</div>
         <div>
+          match
           <input
             type="color"
             value={color}
             onChange={(e) => onChangeColor(e.target.value)}
+          />
+        </div>
+        <div>
+          background
+          <input
+            type="color"
+            value={backgroundColor}
+            onChange={(e) => onChangeBackgroundColor(e.target.value)}
           />
         </div>
         <button onClick={onSave}>save</button>
