@@ -4,10 +4,8 @@ name: Go
 on:
   workflow_dispatch:
   push:
-    branches:
-      - "main"
     tags:
-      - 'r*'
+      - "v[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
   build:
@@ -41,10 +39,10 @@ jobs:
       with:
         name: tolptod
         path: tolptod
-    - name: Release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/r')
+    - name: Run GoReleaser
+      uses: goreleaser/goreleaser-action@v5
       with:
-        files: tolptod
-    - name: Test
-      run: go test -v ./...
+        version: latest
+        args: release --clean
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
