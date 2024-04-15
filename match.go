@@ -1,9 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	// "flag"
-	"fmt"
 	// "time"
 	// "html/template"
 	"github.com/ryought/tolptod/fasta"
@@ -34,60 +31,6 @@ func toInfo(xrs []fasta.Record, yrs []fasta.Record) Info {
 		Xs: toSeqInfo(xrs),
 		Ys: toSeqInfo(yrs),
 	}
-}
-
-type Point struct {
-	X int
-	Y int
-}
-
-func (p Point) MarshalJSON() ([]byte, error) {
-	s := fmt.Sprintf("[%d,%d]", p.X, p.Y)
-	return []byte(s), nil
-}
-
-func pointJsonTest() {
-	p := Point{X: 10, Y: 20}
-	points := []Point{p}
-	// err := json.Unmarshal([]byte("{\"x\":10,\"y\":30}"), &p)
-	s, err := json.Marshal(points)
-	fmt.Println(p, string(s), err)
-}
-
-type Matrix struct {
-	X int
-	Y int
-	m []bool
-}
-
-func NewMatrix(X int, Y int) Matrix {
-	m := make([]bool, X*Y)
-	return Matrix{X, Y, m}
-}
-
-func (m Matrix) Set(x int, y int, v bool) {
-	if x < 0 || x >= m.X {
-		fmt.Println("x out of range", x, m.X)
-	}
-	if y < 0 || y >= m.Y {
-		fmt.Println("y out of range", y, m.Y)
-	}
-	m.m[x*m.Y+y] = v
-}
-
-func (m Matrix) Get(x int, y int) bool {
-	return m.m[x*m.Y+y]
-}
-func (m Matrix) Drain() []Point {
-	points := make([]Point, 0)
-	for X := 0; X < m.X; X++ {
-		for Y := 0; Y < m.Y; Y++ {
-			if m.Get(X, Y) {
-				points = append(points, Point{X, Y})
-			}
-		}
-	}
-	return points
 }
 
 func BuildIndexes(records []fasta.Record) []suffixarray.Index {
