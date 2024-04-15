@@ -178,6 +178,7 @@ function App() {
     <main style={style}>
       <Config
         region={region}
+        onChangeRegion={setRegion}
         onAdd={requestPlot}
         // k-mer rleated
         k={k}

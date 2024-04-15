@@ -4,6 +4,7 @@ import { Record, Plot } from './App'
 
 type Props = {
   region: Region
+  onChangeRegion: (region: Region) => void
   onAdd: () => void
   onSave: () => void
   live: boolean
@@ -34,6 +35,7 @@ type Props = {
 
 export const Config: React.FC<Props> = ({
   region,
+  onChangeRegion,
   onAdd,
   onSave,
   live,
@@ -115,9 +117,39 @@ export const Config: React.FC<Props> = ({
           match revcomp
           <CheckBox value={revcomp} onChange={onChangeRevcomp} />
         </div>
-        <div>cx={region.center.x.toFixed(0)}</div>
-        <div>cy={region.center.y.toFixed(0)}</div>
-        <div>scale={region.scale.toFixed(3)}</div>
+        <div>
+          cx(bp)
+          <NumInput
+            value={region.center.x}
+            onChange={(x) => {
+              const newRegion = { ...region }
+              newRegion.center.x = x
+              onChangeRegion(newRegion)
+            }}
+          />
+        </div>
+        <div>
+          cy(bp)
+          <NumInput
+            value={region.center.y}
+            onChange={(y) => {
+              const newRegion = { ...region }
+              newRegion.center.y = y
+              onChangeRegion(newRegion)
+            }}
+          />
+        </div>
+        <div>
+          scale(bp/px)
+          <NumInput
+            value={region.scale}
+            onChange={(scale) => {
+              const newRegion = { ...region }
+              newRegion.scale = scale
+              onChangeRegion(newRegion)
+            }}
+          />
+        </div>
         <div>
           match
           <input
@@ -243,25 +275,13 @@ export const List: React.FC<ListProps> = ({ items, index, onChange }) => {
 
 type NumInputProps = {
   value: number
-  min: number
-  max: number
-  step?: number
   onChange: (value: number) => void
 }
 
-export const NumInput: React.FC<NumInputProps> = ({
-  value,
-  onChange,
-  min,
-  max,
-  step,
-}) => {
+export const NumInput: React.FC<NumInputProps> = ({ value, onChange }) => {
   return (
     <input
-      type="range"
-      min={min}
-      max={max}
-      step={step ?? 1}
+      type="number"
       value={value}
       onChange={(e) => onChange(parseFloat(e.target.value))}
     />
