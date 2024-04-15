@@ -4,6 +4,8 @@ name: Go
 on:
   workflow_dispatch:
   push:
+    branches:
+      - "main"
     tags:
       - 'r*'
 
@@ -34,8 +36,6 @@ jobs:
       run: |
         go build -v .
         ls -la
-    - name: Test
-      run: go test -v ./...
     - name: Upload Go binary
       uses: actions/upload-artifact@v4
       with:
@@ -46,3 +46,5 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/r')
       with:
         files: tolptod
+    - name: Test
+      run: go test -v ./...
