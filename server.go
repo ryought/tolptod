@@ -84,14 +84,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(html)
 }
 
-var addr = flag.String("b", ":8080", "bind to address:port (default: 0.0.0.0:8080)")
+var addr = flag.String("b", ":8080", "address:port to bind. Default: localhost and port 8080.")
+var help = flag.Bool("h", false, "show help")
 
 func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	if len(args) < 2 {
-		log.Fatalf("Usage: tolptod x.fa y.fa -b localhost:8080")
+	if len(args) < 2 || *help {
+		log.Fatalf("Usage v0.2: tolptod -b localhost:8080 x.fa y.fa")
 	}
 
 	// parse fasta
