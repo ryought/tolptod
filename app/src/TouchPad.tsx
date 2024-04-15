@@ -191,6 +191,16 @@ export const TouchPad: React.FC<Props> = ({
     onChange({ center, scale })
   }
 
+  useEffect(() => {
+    document.addEventListener(
+      'wheel',
+      (event) => {
+        event.preventDefault()
+      },
+      { passive: false }
+    )
+  }, [])
+
   return (
     <div
       ref={ref}
