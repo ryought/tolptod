@@ -6,6 +6,7 @@ import (
 	"fmt"
 	// "time"
 	// "html/template"
+	"github.com/ryought/tolptod/fasta"
 	"github.com/ryought/tolptod/suffixarray"
 )
 
@@ -19,7 +20,7 @@ type Seq struct {
 	Len int    `json:"len"`
 }
 
-func toSeqInfo(rs []Record) []Seq {
+func toSeqInfo(rs []fasta.Record) []Seq {
 	is := make([]Seq, len(rs))
 	for i, r := range rs {
 		is[i].Id = string(r.ID)
@@ -28,7 +29,7 @@ func toSeqInfo(rs []Record) []Seq {
 	return is
 }
 
-func toInfo(xrs []Record, yrs []Record) Info {
+func toInfo(xrs []fasta.Record, yrs []fasta.Record) Info {
 	return Info{
 		Xs: toSeqInfo(xrs),
 		Ys: toSeqInfo(yrs),
@@ -89,7 +90,7 @@ func (m Matrix) Drain() []Point {
 	return points
 }
 
-func BuildIndexes(records []Record) []suffixarray.Index {
+func BuildIndexes(records []fasta.Record) []suffixarray.Index {
 	indexes := make([]suffixarray.Index, len(records))
 	for i, record := range records {
 		// create suffix array
@@ -106,11 +107,11 @@ func FindMatch(x suffixarray.Index, xa int, xb int, y []byte, scale int, k int, 
 	for j := 0; j < len(y)-k; j++ {
 		kmer := y[j : j+k]
 		if revcomp {
-			kmer = RevComp(kmer)
+			kmer = fasta.RevComp(kmer)
 		}
 
 		// start := time.Now()
-		offsets := x.LookupWithin(kmer, xa, xb, freqUp+1)
+		_, offsets := x.LookupWithin(kmer, xa, xb, freqUp+1)
 		// elapsed := time.Now().Sub(start)
 		// fmt.Println("j", j, elapsed.Milliseconds())
 

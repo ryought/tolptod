@@ -248,11 +248,21 @@ func (x *Index) lookupAll(s []byte) ints {
 	return x.sa.slice(i, j)
 }
 
+// Dump suffix array
+func (x *Index) SA() []int64 {
+	n := x.sa.len()
+	sa := make([]int64, n)
+	for i := range sa {
+		sa[i] = x.sa.get(i)
+	}
+	return sa
+}
+
 // Find occurrences of s in substring data[a:b] (half-open) (at most n indices)
-func (x *Index) LookupWithin(s []byte, a int, b int, n int) (result []int) {
+func (x *Index) LookupWithin(s []byte, a int, b int, n int) (count int, result []int) {
 	if len(s) > 0 {
 		matches := x.lookupAll(s)
-		count := matches.len()
+		count = matches.len()
 		result = make([]int, 0, n)
 		for i := 0; i < count; i++ {
 			var pos int
