@@ -7,7 +7,7 @@ import (
 func TestHoge(t *testing.T) {
 	bits := []bool{true, false, true, false, false, true, false, true, true}
 	bv := New(bits)
-	bv.debug()
+	bv.Debug()
 
 	tests := []struct {
 		b bool

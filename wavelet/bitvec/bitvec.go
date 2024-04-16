@@ -28,7 +28,7 @@ func New(bits []bool) BitVec {
 	}
 }
 
-func bit2int(b bool) int {
+func Bit2int(b bool) int {
 	if b {
 		return 1
 	} else {
@@ -36,9 +36,17 @@ func bit2int(b bool) int {
 	}
 }
 
-func (bv BitVec) debug() {
+func Int2Bit(i int) bool {
+	if i > 0 {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (bv BitVec) Debug() {
 	for i := range bv.bits {
-		fmt.Printf("bits[i=%d]=%d\trank=%d\n", i, bit2int(bv.bits[i]), bv.rank[i])
+		fmt.Printf("bits[i=%d]=%d\trank=%d\n", i, Bit2int(bv.bits[i]), bv.rank[i])
 	}
 }
 
