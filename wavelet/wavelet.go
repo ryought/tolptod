@@ -66,7 +66,7 @@ func NewV2(s []byte, K int) WaveletV2 {
 		for i := 0; i < 8; i++ {
 			// depth
 			d := k*8 + i
-			fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
+			// fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
 
 			// B0
 			b = make([]byte, len(s))
@@ -79,8 +79,8 @@ func NewV2(s []byte, K int) WaveletV2 {
 					b[o] = 1
 				}
 			}
-			fmt.Println(x, "X")
-			fmt.Println(b, "B", offset)
+			// fmt.Println(x, "X")
+			// fmt.Println(b, "B", offset)
 
 			// sort X0 to X1
 			o0, o1 := 0, offset
@@ -94,11 +94,11 @@ func NewV2(s []byte, K int) WaveletV2 {
 				}
 			}
 			copy(x, tmp)
-			fmt.Println(x, "X'")
+			// fmt.Println(x, "X'")
 
 			bits[d] = b
 			ranks[d] = createRank(b)
-			fmt.Println(ranks[d], "rank")
+			// fmt.Println(ranks[d], "rank")
 			offsets[d] = offset
 		}
 	}
@@ -251,13 +251,11 @@ func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
 		// fmt.Printf("searching [%d,%d) in d=%d \n", s.oL, s.oR, s.d)
 		// fmt.Println("b", s.b)
 
-		if s.d == K*8 {
-			// fmt.Println("found!")
-			return s.b, s.Size()
-		}
-
 		i := s.d % 8
 		k := s.d / 8
+		if k == K {
+			return s.b, s.Size()
+		}
 		if i == 0 {
 			s.b = append(s.b, 0)
 		}
@@ -266,7 +264,7 @@ func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
 		{
 			oL := w.ranks[s.d][s.oL]
 			oR := w.ranks[s.d][s.oR]
-			if oR-oL > 0 {
+			if oL < oR {
 				b := clone(s.b)
 				b[k] = b[k] | (0 << i)
 				// fmt.Printf("L i=%d k=%d %08b\n", i, k, b[k])
@@ -284,7 +282,7 @@ func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
 		{
 			oL := w.offsets[s.d] + s.oL - w.ranks[s.d][s.oL]
 			oR := w.offsets[s.d] + s.oR - w.ranks[s.d][s.oR]
-			if oR-oL > 0 {
+			if oL < oR {
 				b := clone(s.b)
 				b[k] = b[k] | (1 << i)
 				// fmt.Printf("R i=%d k=%d %08b\n", i, k, b[k])
@@ -304,6 +302,58 @@ func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
 	return []byte{}, 0
 }
 
-func (w WaveletV2) Intersect(i int, query []byte) int {
-	return 0
+// Find common K-mer in S[aL:aR) and S[bL:bR).
+func (w WaveletV2) Intersect(aL, aR, bL, bR int, K int) (int, int) {
+	if aL < 0 || aR > w.N() || aL > aR {
+		panic("invalid search interval [aL:aR)")
+	}
+	if bL < 0 || bR > w.N() || bL > bR {
+		panic("invalid search interval [bL:bR)")
+	}
+	if K > w.K() {
+		panic("k cannot be grater than Wavelet.K")
+	}
+
+	q := NewQueue()
+	d := 0
+	q.Push(Intersection{aL, aR, bL, bR, d})
+
+	for q.Len() > 0 {
+		is := q.Pop()
+		// fmt.Printf("poped [%d,%d) [%d,%d) d=%d\n", is.aL, is.aR, is.bL, is.bR, is.d)
+
+		k := is.d / 8
+		if k == K {
+			// fmt.Println("found!")
+			return is.aR - is.aL, is.bR - is.bL
+		}
+
+		// to left
+		{
+			aL = w.ranks[is.d][is.aL]
+			aR = w.ranks[is.d][is.aR]
+			bL = w.ranks[is.d][is.bL]
+			bR = w.ranks[is.d][is.bR]
+			d = is.d + 1
+			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
+			if aL < aR && bL < bR {
+				q.Push(Intersection{aL, aR, bL, bR, d})
+			}
+		}
+
+		// to right
+		{
+			aL = w.offsets[is.d] + is.aL - w.ranks[is.d][is.aL]
+			aR = w.offsets[is.d] + is.aR - w.ranks[is.d][is.aR]
+			bL = w.offsets[is.d] + is.bL - w.ranks[is.d][is.bL]
+			bR = w.offsets[is.d] + is.bR - w.ranks[is.d][is.bR]
+			d = is.d + 1
+			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
+			if aL < aR && bL < bR {
+				q.Push(Intersection{aL, aR, bL, bR, d})
+			}
+		}
+	}
+
+	return 0, 0
 }

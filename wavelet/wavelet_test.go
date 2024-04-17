@@ -132,3 +132,37 @@ func TestTop(t *testing.T) {
 		}
 	}
 }
+
+func TestIntersection(t *testing.T) {
+	s := []byte("XXXXXYYYYY")
+	w := NewV2(s, 3)
+
+	tests := []struct {
+		aL int
+		aR int
+		bL int
+		bR int
+		K  int
+		a  int
+		b  int
+	}{
+		{0, 5, 5, 10, 1, 0, 0},  // [0:5) [5:10) have no common char
+		{0, 5, 0, 10, 1, 5, 5},  // [0:5) [0:10) have five "XX"s
+		{0, 6, 4, 10, 2, 1, 1},  // XY in common
+		{5, 9, 0, 9, 2, 4, 4},   // four YY in common
+		{5, 10, 0, 10, 2, 1, 1}, //
+	}
+
+	for _, test := range tests {
+		a, b := w.Intersect(test.aL, test.aR, test.bL, test.bR, test.K)
+		t.Log(test, a, b)
+		if a != test.a || b != test.b {
+			t.Error("not correct")
+		}
+	}
+
+	{
+		a, b := w.Intersect(5, 10, 0, 10, 2)
+		t.Log(a, b)
+	}
+}
