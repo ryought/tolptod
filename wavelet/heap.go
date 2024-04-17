@@ -29,7 +29,7 @@ func (pq *PriorityQueue) Pop() any {
 	return item
 }
 
-func New() PriorityQueue {
+func NewPriorityQueue() PriorityQueue {
 	h := PriorityQueue{}
 	heap.Init(&h)
 	return h

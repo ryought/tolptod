@@ -5,7 +5,7 @@ import (
 )
 
 func TestHeap(t *testing.T) {
-	h := New()
+	h := NewPriorityQueue()
 	t.Log(h)
 
 	h.HeapPush(Search{oL: 0, oR: 100, d: 1})

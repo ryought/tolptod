@@ -10,7 +10,7 @@ import (
 	"fmt"
 )
 
-type WaveletV2 struct {
+type Wavelet struct {
 	bits    [][]byte
 	ranks   [][]int
 	offsets []int
@@ -32,22 +32,22 @@ func printBits(s []byte) {
 }
 
 // max k size
-func (w WaveletV2) K() int {
+func (w Wavelet) K() int {
 	return w.D() / 8
 }
 
 // depth
-func (w WaveletV2) D() int {
+func (w Wavelet) D() int {
 	return len(w.offsets)
 }
 
 // length of s
-func (w WaveletV2) N() int {
+func (w Wavelet) N() int {
 	return len(w.bits[0])
 }
 
 // constructor
-func NewV2(s []byte, K int) WaveletV2 {
+func New(s []byte, K int) Wavelet {
 	D := K * 8
 	bits := make([][]byte, D)
 	ranks := make([][]int, D)
@@ -103,7 +103,7 @@ func NewV2(s []byte, K int) WaveletV2 {
 		}
 	}
 
-	return WaveletV2{bits, ranks, offsets}
+	return Wavelet{bits, ranks, offsets}
 }
 
 // Create rank array rank[0:n+1) of bytes b[0:n).
@@ -129,7 +129,7 @@ func createRank(b []byte) []int {
 }
 
 // Get s[i:i+K) subsequence for 0<=i<n.
-func (w WaveletV2) Access(i int, K int) []byte {
+func (w Wavelet) Access(i int, K int) []byte {
 	if i < 0 || i >= w.N() {
 		panic("Access: index out of range")
 	}
@@ -182,7 +182,7 @@ func (w WaveletV2) Access(i int, K int) []byte {
 }
 
 // Get the occurrence of query in s[0:i) for 0<=i<=n.
-func (w WaveletV2) Rank(i int, query []byte) int {
+func (w Wavelet) Rank(i int, query []byte) int {
 	if len(query) > w.K() {
 		panic("query cannot be longer than Wavelet.K")
 	}
@@ -232,7 +232,7 @@ func clone(b []byte) []byte {
 }
 
 // Get top frequent K-mers in s[i:j)
-func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
+func (w Wavelet) Top(i int, j int, K int) ([]byte, int) {
 	if i < 0 || j > w.N() || i > j {
 		panic("invalid search interval")
 	}
@@ -241,7 +241,7 @@ func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
 	}
 
 	// initialize priority queue
-	h := New()
+	h := NewPriorityQueue()
 
 	// subregion [oL:oR) have d bits match.
 	h.HeapPush(Search{oL: i, oR: j, d: 0, b: make([]byte, 0)})
@@ -311,7 +311,7 @@ func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
 }
 
 // Find common K-mer in S[aL:aR) and S[bL:bR).
-func (w WaveletV2) Intersect(aL, aR, bL, bR int, K int) (int, int) {
+func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 	if aL < 0 || aR > w.N() || aL > aR {
 		panic("invalid search interval [aL:aR)")
 	}

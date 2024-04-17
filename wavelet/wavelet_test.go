@@ -20,7 +20,7 @@ func TestAccess(t *testing.T) {
 	s := []byte("ATCGAGATG")
 	printBits(s)
 
-	w := NewV2(s, 3)
+	w := New(s, 3)
 
 	// access
 	q := w.Access(8, 1)
@@ -58,7 +58,7 @@ func TestRank(t *testing.T) {
 	s := []byte("ATCGAGATG")
 	n := len(s)
 	printBits(s)
-	w := NewV2(s, 3)
+	w := New(s, 3)
 
 	c := w.Rank(3, []byte("G"))
 	t.Log(c)
@@ -98,7 +98,7 @@ func TestTop(t *testing.T) {
 	s := []byte("CATCGAGATGAGA")
 	n := len(s)
 	printBits(s)
-	w := NewV2(s, 3)
+	w := New(s, 3)
 
 	{
 		q, c := w.Top(0, n, 1)
@@ -137,7 +137,7 @@ func TestTopWithDoller(t *testing.T) {
 	s := []byte("CATC$$$$GAC")
 	n := len(s)
 	printBits(s)
-	w := NewV2(s, 3)
+	w := New(s, 3)
 	{
 		q, c := w.Top(0, n, 1)
 		t.Log(string(q), c)
@@ -150,7 +150,7 @@ func TestTopWithDoller(t *testing.T) {
 func TestIntersectionEnd(t *testing.T) {
 	{
 		s := []byte("AAA$GGG$")
-		w := NewV2(s, 3)
+		w := New(s, 3)
 		a, b := w.Intersect(0, 4, 4, 8, 1)
 		t.Log(a, b)
 		if a != 0 && b != 0 {
@@ -160,7 +160,7 @@ func TestIntersectionEnd(t *testing.T) {
 
 	{
 		s := []byte("AAA$GGA$")
-		w := NewV2(s, 3)
+		w := New(s, 3)
 		a, b := w.Intersect(0, 4, 4, 8, 1)
 		t.Log(a, b)
 		// A is in common
@@ -178,7 +178,7 @@ func TestIntersectionEnd(t *testing.T) {
 
 func TestIntersection(t *testing.T) {
 	s := []byte("AAAAAGGGGG")
-	w := NewV2(s, 3)
+	w := New(s, 3)
 
 	tests := []struct {
 		aL int
