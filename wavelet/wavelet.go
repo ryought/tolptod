@@ -1,6 +1,7 @@
 package wavelet
 
 // reference
+// Claude, F., Navarro, G. (2012). The Wavelet Matrix. In: Calderón-Benavides, L., González-Caro, C., Chávez, E., Ziviani, N. (eds) String Processing and Information Retrieval. SPIRE 2012. Lecture Notes in Computer Science, vol 7608. Springer, Berlin, Heidelberg. https://doi.org/10.1007/978-3-642-34109-0_18
 // https://miti-7.hatenablog.com/entry/2018/04/28/152259
 // https://scrapbox.io/koki/Wavelet_Matrix
 // https://www.slideshare.net/pfi/ss-15916040
@@ -105,59 +106,57 @@ func NewV2(s []byte, K int) WaveletV2 {
 	return WaveletV2{bits, ranks, offsets}
 }
 
-// Create rank array.
-// rank[i] is the occurrence count of 0s in b[0]...b[i] (both-closed slice)
-// the occurrence of 1s in b[0]...b[i] is (i+1)-rank[i].
+// Create rank array rank[0:n+1) of bytes b[0:n).
 //
-// For example,
-// createRank([0 1 0 1 0 0])
-// will be    [1 1 2 2 3 4]
+// rank[i] is the occurrence count of 0s in b[0:i)=b[0]...b[i-1].
+//
+// (the occurrence of 1s in b[0:i) is i-rank[i].)
+//
+// For example, createRank([0 1 0 1 0 0])=[0 1 1 2 2 3 4]
 func createRank(b []byte) []int {
-	rank := make([]int, len(b))
+	n := len(b)
+	rank := make([]int, n+1)
 	// current occurrence of zero in b
 	count := 0
 	for i := range b {
+		rank[i] = count
 		if b[i] == 0 {
 			count += 1
 		}
-		rank[i] = count
 	}
+	rank[n] = count
 	return rank
 }
 
-// Get s[i:i+K) subsequence.
+// Get s[i:i+K) subsequence for 0<=i<n.
 func (w WaveletV2) Access(i int, K int) []byte {
 	if i < 0 || i >= w.N() {
-		panic("Access index out of range")
+		panic("Access: index out of range")
 	}
 	if K > w.K() {
-		panic("k cannot be grater than Wavelet.K")
+		panic("Access: k cannot be grater than Wavelet.K")
 	}
 
 	// subsequence to be returned
 	s := make([]byte, K)
 
 	// index in w.bits[d].
+	// B[0][i]
 	o := i
 	for k := 0; k < K; k++ {
 		var c byte
 		for i := 0; i < 8; i++ {
 			d := k*8 + i
-			// fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
 			b := w.bits[d][o]
 			c = c | (b << i)
-			// fmt.Printf("o=%d b=%d c=%d\n", o, b, c)
-			// fmt.Println(w.bits[d], "B")
-			// fmt.Println(w.ranks[d], "ranks")
-			// fmt.Println(w.offsets[d], "offset")
 			if b == 1 {
 				// go to right (1).
-				// number of zeros (offset) + number of ones before o.
+				// new index =  (number of zeros (offset)) + (number of ones before o)
 				//
 				//                 o        o=4
 				// B[d-1]  0 1 0 1 1 1 0 0  offset=4
 				// rank0   1 1 2 2 2 2 3 4
-				// rank1   0 1 1 2 3 4 4 4  rank1[i] = (i+1) - rank0[i]
+				// rank1   0 1 1 2 3 4 4 4  rank1[i] = i - rank0[i]
 				// B[d]    0 0 0 0 1 1 1 1
 				//         <-----> <--->
 				//                     o    new o=6
@@ -173,7 +172,7 @@ func (w WaveletV2) Access(i int, K int) []byte {
 				// B[d]    0 0 0 0 1 1 1 1
 				//         <--->
 				//             o        new o=2
-				o = w.ranks[d][o] - 1
+				o = w.ranks[d][o]
 			}
 			// fmt.Println("newo", o)
 		}
@@ -182,33 +181,32 @@ func (w WaveletV2) Access(i int, K int) []byte {
 	return s
 }
 
-// Get the occurrence of query in s[0:i) = s[0]...s[i-1]
+// Get the occurrence of query in s[0:i) for 0<=i<=n.
 func (w WaveletV2) Rank(i int, query []byte) int {
 	if len(query) > w.K() {
 		panic("query cannot be longer than Wavelet.K")
 	}
-	if !(i >= 0 && i <= w.N()) {
+	if i < 0 || i > w.N() {
 		panic("i should be 0<=i<=N")
 	}
 
-	// subregion [oL:oR) of bits represents query that have the same first d bit.
+	// subregion [oL:oR) in B[d] of bits represents query that have the same first d bit.
+	// d = 0, [L=0:R=i) is valid region.
 	oL, oR := 0, i
 
 	for k := range query {
 		for i := 0; i < 8; i++ {
 			d := k*8 + i
 			b := ix(query, k, i)
-			fmt.Printf("k=%d i=%d b=%d d=%d\n", k, i, b, d)
-			fmt.Printf("[%d, %d]\n", oL, oR)
-			if oR <= oL {
+			if oL == oR {
 				return 0
 			}
 			if b == 1 {
 				oL = w.offsets[d] + oL - w.ranks[d][oL]
-				oR = w.offsets[d] + oR - w.ranks[d][oR-1]
+				oR = w.offsets[d] + oR - w.ranks[d][oR]
 			} else {
-				oL = w.ranks[d][oL] - 1
-				oR = w.ranks[d][oR-1]
+				oL = w.ranks[d][oL]
+				oR = w.ranks[d][oR]
 			}
 		}
 	}
