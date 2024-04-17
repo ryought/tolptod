@@ -107,7 +107,7 @@ func NewCustom(s []byte, K int, W int) Wavelet {
 					o1 += 1
 				}
 			}
-			copy(x, tmp)
+			x, tmp = tmp, x
 			// fmt.Println(x, "X'")
 
 			bits[d] = b
