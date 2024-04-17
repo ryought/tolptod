@@ -26,15 +26,16 @@ func TestWaveletLarge(t *testing.T) {
 		t.Log(n)
 
 		t0 := time.Now()
-		w := NewDNAWavelet(s, 100)
+		K := 100
+		w := NewDNAWavelet(s, K)
 		t.Logf("wave %d ms", time.Since(t0).Milliseconds())
 
 		t1 := time.Now()
 		suffixarray.New(s)
 		t.Logf("sais %d ms", time.Since(t1).Milliseconds())
 
-		x := w.Access(10, 100)
-		if !bytes.Equal(x, s[10:10+100]) {
+		x := w.Access(10, K)
+		if !bytes.Equal(x, s[10:10+K]) {
 			t.Error()
 		}
 

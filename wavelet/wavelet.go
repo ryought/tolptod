@@ -8,6 +8,7 @@ package wavelet
 
 import (
 	"fmt"
+	// "time"
 )
 
 type Wavelet struct {
@@ -19,7 +20,7 @@ type Wavelet struct {
 
 // i-th (0<=i<8) bit of s[k] (byte uint8).
 func ix(s []byte, k int, i int) byte {
-	if k < len(s) && i < 8 {
+	if k < len(s) {
 		return s[k] >> i & 1
 	} else {
 		return 0
@@ -83,6 +84,7 @@ func NewCustom(s []byte, K int, W int) Wavelet {
 			// fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
 
 			// B0
+			// t0 := time.Now()
 			b = make([]byte, len(s))
 			offset := 0
 			for o := range b {
@@ -93,10 +95,12 @@ func NewCustom(s []byte, K int, W int) Wavelet {
 					b[o] = 1
 				}
 			}
+			// fmt.Printf("t0 %d ms\n", time.Since(t0).Milliseconds())
 			// fmt.Println(x, "X")
 			// fmt.Println(b, "B", offset)
 
 			// sort X0 to X1
+			// t1 := time.Now()
 			o0, o1 := 0, offset
 			for o := range x {
 				if b[o] == 0 {
@@ -107,11 +111,14 @@ func NewCustom(s []byte, K int, W int) Wavelet {
 					o1 += 1
 				}
 			}
+			// fmt.Printf("t1 %d ms\n", time.Since(t1).Milliseconds())
 			x, tmp = tmp, x
 			// fmt.Println(x, "X'")
 
 			bits[d] = b
+			// t2 := time.Now()
 			ranks[d] = createRank(b)
+			// fmt.Printf("t2 %d ms\n", time.Since(t2).Milliseconds())
 			// fmt.Println(ranks[d], "rank")
 			offsets[d] = offset
 		}
