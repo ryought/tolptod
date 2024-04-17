@@ -1,6 +1,7 @@
 package wavelet
 
-func ToDNA(s []byte) {
+// compact DNA byte representation
+func ToCompactDNA(s []byte) {
 	// code -> byte
 	// to := []byte{'$', '#', 'A', 'C', 'G', 'T', 'N', ' '}
 	to := []byte{'A', 'C', 'G', 'T'}

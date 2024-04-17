@@ -253,9 +253,17 @@ func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
 
 		i := s.d % 8
 		k := s.d / 8
+		if i == 0 && k > 0 {
+			if s.b[k-1] == '$' || s.b[k-1] == 0 {
+				// break this intersection
+				continue
+			}
+		}
 		if k == K {
 			return s.b, s.Size()
 		}
+
+		// prepare a new byte to store k-mer bytes
 		if i == 0 {
 			s.b = append(s.b, 0)
 		}
@@ -316,13 +324,24 @@ func (w WaveletV2) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 
 	q := NewQueue()
 	d := 0
-	q.Push(Intersection{aL, aR, bL, bR, d})
+	var c byte
+	q.Push(Intersection{aL, aR, bL, bR, d, c})
 
 	for q.Len() > 0 {
 		is := q.Pop()
 		// fmt.Printf("poped [%d,%d) [%d,%d) d=%d\n", is.aL, is.aR, is.bL, is.bR, is.d)
 
+		i := is.d % 8
 		k := is.d / 8
+		if i == 0 && k > 0 {
+			// fmt.Printf("current char %c\n", c)
+			if is.c == '$' || is.c == 0 {
+				// break this intersection
+				continue
+			} else {
+				is.c = 0
+			}
+		}
 		if k == K {
 			// fmt.Println("found!")
 			return is.aR - is.aL, is.bR - is.bL
@@ -330,27 +349,29 @@ func (w WaveletV2) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 
 		// to left
 		{
-			aL = w.ranks[is.d][is.aL]
-			aR = w.ranks[is.d][is.aR]
-			bL = w.ranks[is.d][is.bL]
-			bR = w.ranks[is.d][is.bR]
-			d = is.d + 1
+			aL := w.ranks[is.d][is.aL]
+			aR := w.ranks[is.d][is.aR]
+			bL := w.ranks[is.d][is.bL]
+			bR := w.ranks[is.d][is.bR]
+			d := is.d + 1
+			c := is.c | (0 << i)
 			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
 			if aL < aR && bL < bR {
-				q.Push(Intersection{aL, aR, bL, bR, d})
+				q.Push(Intersection{aL, aR, bL, bR, d, c})
 			}
 		}
 
 		// to right
 		{
-			aL = w.offsets[is.d] + is.aL - w.ranks[is.d][is.aL]
-			aR = w.offsets[is.d] + is.aR - w.ranks[is.d][is.aR]
-			bL = w.offsets[is.d] + is.bL - w.ranks[is.d][is.bL]
-			bR = w.offsets[is.d] + is.bR - w.ranks[is.d][is.bR]
-			d = is.d + 1
+			aL := w.offsets[is.d] + is.aL - w.ranks[is.d][is.aL]
+			aR := w.offsets[is.d] + is.aR - w.ranks[is.d][is.aR]
+			bL := w.offsets[is.d] + is.bL - w.ranks[is.d][is.bL]
+			bR := w.offsets[is.d] + is.bR - w.ranks[is.d][is.bR]
+			d := is.d + 1
+			c := is.c | (1 << i)
 			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
 			if aL < aR && bL < bR {
-				q.Push(Intersection{aL, aR, bL, bR, d})
+				q.Push(Intersection{aL, aR, bL, bR, d, c})
 			}
 		}
 	}

@@ -5,7 +5,8 @@ type Intersection struct {
 	aR int
 	bL int
 	bR int
-	d  int
+	d  int  // Current depth
+	c  byte // Last character of k-mer
 }
 
 type Queue []Intersection

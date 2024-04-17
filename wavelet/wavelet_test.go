@@ -133,8 +133,51 @@ func TestTop(t *testing.T) {
 	}
 }
 
+func TestTopWithDoller(t *testing.T) {
+	s := []byte("CATC$$$$GAC")
+	n := len(s)
+	printBits(s)
+	w := NewV2(s, 3)
+	{
+		q, c := w.Top(0, n, 1)
+		t.Log(string(q), c)
+		if !bytes.Equal(q, []byte("C")) || c != 3 {
+			t.Error()
+		}
+	}
+}
+
+func TestIntersectionEnd(t *testing.T) {
+	{
+		s := []byte("AAA$GGG$")
+		w := NewV2(s, 3)
+		a, b := w.Intersect(0, 4, 4, 8, 1)
+		t.Log(a, b)
+		if a != 0 && b != 0 {
+			t.Error()
+		}
+	}
+
+	{
+		s := []byte("AAA$GGA$")
+		w := NewV2(s, 3)
+		a, b := w.Intersect(0, 4, 4, 8, 1)
+		t.Log(a, b)
+		// A is in common
+		if a != 3 && b != 1 {
+			t.Error()
+		}
+
+		a, b = w.Intersect(0, 4, 4, 8, 2)
+		t.Log(a, b)
+		if a != 0 && b != 0 {
+			t.Error()
+		}
+	}
+}
+
 func TestIntersection(t *testing.T) {
-	s := []byte("XXXXXYYYYY")
+	s := []byte("AAAAAGGGGG")
 	w := NewV2(s, 3)
 
 	tests := []struct {
@@ -150,7 +193,7 @@ func TestIntersection(t *testing.T) {
 		{0, 5, 0, 10, 1, 5, 5},  // [0:5) [0:10) have five "XX"s
 		{0, 6, 4, 10, 2, 1, 1},  // XY in common
 		{5, 9, 0, 9, 2, 4, 4},   // four YY in common
-		{5, 10, 0, 10, 2, 1, 1}, //
+		{5, 10, 0, 10, 2, 4, 4}, // four GG in common
 	}
 
 	for _, test := range tests {
