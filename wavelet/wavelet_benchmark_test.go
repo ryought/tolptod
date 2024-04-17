@@ -8,7 +8,11 @@ import (
 	"time"
 )
 
-func TestRadixLarge(t *testing.T) {
+func TestWaveletLarge(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
 	ns := []int{
 		1_000, // 1KB
 		10_000,
@@ -22,7 +26,7 @@ func TestRadixLarge(t *testing.T) {
 		t.Log(n)
 
 		t0 := time.Now()
-		w := New(s, 100)
+		w := NewDNAWavelet(s, 100)
 		t.Logf("wave %d ms", time.Since(t0).Milliseconds())
 
 		t1 := time.Now()
@@ -30,14 +34,14 @@ func TestRadixLarge(t *testing.T) {
 		t.Logf("sais %d ms", time.Since(t1).Milliseconds())
 
 		x := w.Access(10, 100)
-		if !bytes.Equal(x, s[10:100]) {
+		if !bytes.Equal(x, s[10:10+100]) {
 			t.Error()
 		}
 
 	}
 }
 
-func BenchmarkRadixLarge(b *testing.B) {
+func BenchmarkWaveletLarge(b *testing.B) {
 	s := rand.RandomDNA(1_000_000) // 1MB
 	b.Log("building", len(s))
 	b.StartTimer()

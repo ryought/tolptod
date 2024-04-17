@@ -14,9 +14,10 @@ type Wavelet struct {
 	bits    [][]byte
 	ranks   [][]int
 	offsets []int
+	width   int
 }
 
-// i-th (0<=i<8) bit of s[k].
+// i-th (0<=i<8) bit of s[k] (byte uint8).
 func ix(s []byte, k int, i int) byte {
 	if k < len(s) && i < 8 {
 		return s[k] >> i & 1
@@ -33,7 +34,12 @@ func printBits(s []byte) {
 
 // max k size
 func (w Wavelet) K() int {
-	return w.D() / 8
+	return w.D() / w.W()
+}
+
+// bit width
+func (w Wavelet) W() int {
+	return w.width
 }
 
 // depth
@@ -46,9 +52,17 @@ func (w Wavelet) N() int {
 	return len(w.bits[0])
 }
 
-// constructor
+// Constructor
 func New(s []byte, K int) Wavelet {
-	D := K * 8
+	return NewCustom(s, K, 8)
+}
+
+// constructor
+func NewCustom(s []byte, K int, W int) Wavelet {
+	if W < 1 || W > 8 {
+		panic("W should be 1<=W<=8.")
+	}
+	D := K * W
 	bits := make([][]byte, D)
 	ranks := make([][]int, D)
 	offsets := make([]int, D)
@@ -63,9 +77,9 @@ func New(s []byte, K int) Wavelet {
 	var b []byte
 
 	for k := 0; k < K; k++ {
-		for i := 0; i < 8; i++ {
+		for i := 0; i < W; i++ {
 			// depth
-			d := k*8 + i
+			d := k*W + i
 			// fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
 
 			// B0
@@ -103,7 +117,8 @@ func New(s []byte, K int) Wavelet {
 		}
 	}
 
-	return Wavelet{bits, ranks, offsets}
+	width := W
+	return Wavelet{bits, ranks, offsets, width}
 }
 
 // Create rank array rank[0:n+1) of bytes b[0:n).
@@ -143,10 +158,11 @@ func (w Wavelet) Access(i int, K int) []byte {
 	// index in w.bits[d].
 	// B[0][i]
 	o := i
+	W := w.W()
 	for k := 0; k < K; k++ {
 		var c byte
-		for i := 0; i < 8; i++ {
-			d := k*8 + i
+		for i := 0; i < W; i++ {
+			d := k*W + i
 			b := w.bits[d][o]
 			c = c | (b << i)
 			if b == 1 {
@@ -194,9 +210,10 @@ func (w Wavelet) Rank(i int, query []byte) int {
 	// d = 0, [L=0:R=i) is valid region.
 	oL, oR := 0, i
 
+	W := w.W()
 	for k := range query {
-		for i := 0; i < 8; i++ {
-			d := k*8 + i
+		for i := 0; i < W; i++ {
+			d := k*W + i
 			b := ix(query, k, i)
 			if oL == oR {
 				return 0
@@ -246,13 +263,14 @@ func (w Wavelet) Top(i int, j int, K int) ([]byte, int) {
 	// subregion [oL:oR) have d bits match.
 	h.HeapPush(Search{oL: i, oR: j, d: 0, b: make([]byte, 0)})
 
+	W := w.W()
 	for h.Len() > 0 {
 		s := h.HeapPop()
 		// fmt.Printf("searching [%d,%d) in d=%d \n", s.oL, s.oR, s.d)
 		// fmt.Println("b", s.b)
 
-		i := s.d % 8
-		k := s.d / 8
+		i := s.d % W
+		k := s.d / W
 		if i == 0 && k > 0 {
 			if s.b[k-1] == '$' || s.b[k-1] == 0 {
 				// break this intersection
@@ -327,12 +345,13 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 	var c byte
 	q.Push(Intersection{aL, aR, bL, bR, d, c})
 
+	W := w.W()
 	for q.Len() > 0 {
 		is := q.Pop()
 		// fmt.Printf("poped [%d,%d) [%d,%d) d=%d\n", is.aL, is.aR, is.bL, is.bR, is.d)
 
-		i := is.d % 8
-		k := is.d / 8
+		i := is.d % W
+		k := is.d / W
 		if i == 0 && k > 0 {
 			// fmt.Printf("current char %c\n", c)
 			if is.c == '$' || is.c == 0 {
