@@ -93,3 +93,42 @@ func TestRank(t *testing.T) {
 		}
 	}
 }
+
+func TestTop(t *testing.T) {
+	s := []byte("CATCGAGATGAGA")
+	n := len(s)
+	printBits(s)
+	w := NewV2(s, 3)
+
+	{
+		q, c := w.Top(0, n, 1)
+		t.Log(string(q), c)
+		if !bytes.Equal(q, []byte("A")) || c != 5 {
+			t.Errorf("")
+		}
+	}
+
+	{
+		q, c := w.Top(0, 4, 1)
+		t.Log(string(q), c)
+		if !bytes.Equal(q, []byte("C")) || c != 2 {
+			t.Errorf("")
+		}
+	}
+
+	{
+		q, c := w.Top(0, n, 2)
+		t.Log(string(q), c)
+		if !bytes.Equal(q, []byte("GA")) || c != 4 {
+			t.Errorf("")
+		}
+	}
+
+	{
+		q, c := w.Top(0, n, 3)
+		t.Log(string(q), c)
+		if !bytes.Equal(q, []byte("AGA")) || c != 2 {
+			t.Errorf("")
+		}
+	}
+}

@@ -218,56 +218,90 @@ type Search struct {
 	d  int
 	oL int
 	oR int
+	b  []byte
 }
 
 func (s Search) Size() int {
 	return s.oR - s.oL
 }
 
-// Get top-t frequent K-mers in s[i:j]
-func (w WaveletV2) Top(i int, j int, t int, K int) int {
-	if i < 0 || j >= w.N() || i > j {
+func clone(b []byte) []byte {
+	r := make([]byte, len(b))
+	copy(r, b)
+	return r
+}
+
+// Get top frequent K-mers in s[i:j)
+func (w WaveletV2) Top(i int, j int, K int) ([]byte, int) {
+	if i < 0 || j > w.N() || i > j {
 		panic("invalid search interval")
 	}
 	if K > w.K() {
 		panic("k cannot be grater than Wavelet.K")
 	}
 
+	// initialize priority queue
 	h := New()
 
-	// subregion [oL:oR] have d bits match.
-	h.HeapPush(Search{oL: i, oR: j, d: 0})
+	// subregion [oL:oR) have d bits match.
+	h.HeapPush(Search{oL: i, oR: j, d: 0, b: make([]byte, 0)})
 
 	for h.Len() > 0 {
 		s := h.HeapPop()
-		fmt.Printf("searching [%d,%d] in %d\n", s.oL, s.oR, s.d)
+		// fmt.Printf("searching [%d,%d) in d=%d \n", s.oL, s.oR, s.d)
+		// fmt.Println("b", s.b)
 
-		if s.d == K*8-1 {
-			fmt.Println("found!")
-			return s.Size()
+		if s.d == K*8 {
+			// fmt.Println("found!")
+			return s.b, s.Size()
+		}
+
+		i := s.d % 8
+		k := s.d / 8
+		if i == 0 {
+			s.b = append(s.b, 0)
 		}
 
 		// to left
-		s0 := Search{
-			oL: w.ranks[s.d][s.oL] - 1,
-			oR: w.ranks[s.d][s.oR] - 1,
-			d:  s.d + 1,
-		}
-		if s0.Size() > 0 {
-			h.HeapPush(s0)
+		{
+			oL := w.ranks[s.d][s.oL]
+			oR := w.ranks[s.d][s.oR]
+			if oR-oL > 0 {
+				b := clone(s.b)
+				b[k] = b[k] | (0 << i)
+				// fmt.Printf("L i=%d k=%d %08b\n", i, k, b[k])
+				// fmt.Printf("L [%d:%d)\n", oL, oR)
+				h.HeapPush(Search{
+					d:  s.d + 1,
+					oL: oL,
+					oR: oR,
+					b:  b,
+				})
+			}
 		}
 
 		// to right
-		s1 := Search{
-			oL: w.offsets[s.d] + s.oL - w.ranks[s.d][s.oL],
-			oR: w.offsets[s.d] + s.oR - w.ranks[s.d][s.oR],
-			d:  s.d + 1,
-		}
-		if s1.Size() > 0 {
-			h.HeapPush(s1)
+		{
+			oL := w.offsets[s.d] + s.oL - w.ranks[s.d][s.oL]
+			oR := w.offsets[s.d] + s.oR - w.ranks[s.d][s.oR]
+			if oR-oL > 0 {
+				b := clone(s.b)
+				b[k] = b[k] | (1 << i)
+				// fmt.Printf("R i=%d k=%d %08b\n", i, k, b[k])
+				// fmt.Printf("R [%d:%d)\n", oL, oR)
+				s1 := Search{
+					d:  s.d + 1,
+					oL: oL,
+					oR: oR,
+					b:  b,
+				}
+				h.HeapPush(s1)
+			}
 		}
 	}
-	return 0
+
+	// not found
+	return []byte{}, 0
 }
 
 func (w WaveletV2) Intersect(i int, query []byte) int {
