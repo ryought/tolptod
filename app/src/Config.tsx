@@ -11,8 +11,10 @@ type Props = {
   onChangeLive: (live: boolean) => void
   plots: Plot[]
   onChangePlots: (plots: Plot[]) => void
-  color: string
-  onChangeColor: (color: string) => void
+  colorForward: string
+  onChangeColorForward: (color: string) => void
+  colorBackward: string
+  onChangeColorBackward: (color: string) => void
   backgroundColor: string
   onChangeBackgroundColor: (color: string) => void
   // k-mer related
@@ -22,8 +24,6 @@ type Props = {
   onChangeFreqLow: (f: number) => void
   freqUp: number
   onChangeFreqUp: (f: number) => void
-  revcomp: boolean
-  onChangeRevcomp: (revcomp: boolean) => void
   // Id related
   targetIndex: number
   queryIndex: number
@@ -42,8 +42,10 @@ export const Config: React.FC<Props> = ({
   onChangeLive,
   plots,
   onChangePlots,
-  color,
-  onChangeColor,
+  colorForward,
+  onChangeColorForward,
+  colorBackward,
+  onChangeColorBackward,
   backgroundColor,
   onChangeBackgroundColor,
   k,
@@ -52,8 +54,6 @@ export const Config: React.FC<Props> = ({
   onChangeFreqLow,
   freqUp,
   onChangeFreqUp,
-  revcomp,
-  onChangeRevcomp,
   targets,
   querys,
   targetIndex,
@@ -114,10 +114,6 @@ export const Config: React.FC<Props> = ({
           max={100}
         />
         <div>
-          match revcomp
-          <CheckBox value={revcomp} onChange={onChangeRevcomp} />
-        </div>
-        <div>
           cx(bp)
           <NumInput
             value={region.center.x}
@@ -151,11 +147,19 @@ export const Config: React.FC<Props> = ({
           />
         </div>
         <div>
-          match
+          forward
           <input
             type="color"
-            value={color}
-            onChange={(e) => onChangeColor(e.target.value)}
+            value={colorForward}
+            onChange={(e) => onChangeColorForward(e.target.value)}
+          />
+        </div>
+        <div>
+          backward
+          <input
+            type="color"
+            value={colorBackward}
+            onChange={(e) => onChangeColorBackward(e.target.value)}
           />
         </div>
         <div>

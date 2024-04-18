@@ -3,15 +3,22 @@ import React, { useRef, useEffect } from 'react'
 type Props = {
   width?: number
   height?: number
-  points?: [number, number][]
-  color?: string
+  points?: Points
+  colorForward?: string
+  colorBackward?: string
+}
+
+export type Points = {
+  forward: [number, number][]
+  backward: [number, number][]
 }
 
 export const Dotplot: React.FC<Props> = ({
   width,
   height,
-  points = [],
-  color = '#FF0000',
+  points = { forward: [], backward: [] },
+  colorForward = '#FF0000',
+  colorBackward = '#0000FF',
 }) => {
   const ref = useRef<HTMLCanvasElement>(null)
   const style = {
@@ -37,10 +44,15 @@ export const Dotplot: React.FC<Props> = ({
 
     // reset canvas
     ctx.clearRect(0, 0, width, height)
-    ctx.fillStyle = color
 
     console.log('drawing..')
-    for (const point of points) {
+    ctx.fillStyle = colorForward
+    for (const point of points.forward) {
+      ctx.fillRect(point[0], point[1], 1, 1)
+    }
+
+    ctx.fillStyle = colorBackward
+    for (const point of points.backward) {
       ctx.fillRect(point[0], point[1], 1, 1)
     }
 

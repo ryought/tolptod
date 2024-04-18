@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/ryought/tolptod/fasta"
-	"github.com/ryought/tolptod/suffixarray"
 )
 
 //go:embed app/dist/index.html
@@ -28,26 +27,26 @@ type Ping struct {
 }
 
 type Plot struct {
-	Status int     `json:"status"`
-	Result string  `json:"result"`
-	Points []Point `json:"points"`
+	Status   int     `json:"status"`
+	Result   string  `json:"result"`
+	Forward  []Point `json:"forward"`
+	Backward []Point `json:"backward"`
 }
 
 type Request struct {
-	X       int  `json:"x"`
-	Y       int  `json:"y"`
-	XA      int  `json:"xA"`
-	XB      int  `json:"xB"`
-	YA      int  `json:"yA"`
-	YB      int  `json:"yB"`
-	K       int  `json:"k"`
-	FreqLow int  `json:"freqLow"`
-	FreqUp  int  `json:"freqUp"`
-	Scale   int  `json:"scale"`
-	Revcomp bool `json:"revcomp"`
+	X       int `json:"x"`
+	Y       int `json:"y"`
+	XA      int `json:"xA"`
+	XB      int `json:"xB"`
+	YA      int `json:"yA"`
+	YB      int `json:"yB"`
+	K       int `json:"k"`
+	FreqLow int `json:"freqLow"`
+	FreqUp  int `json:"freqUp"`
+	Scale   int `json:"scale"`
 }
 
-func createGenerateHandler(xis []suffixarray.Index, yrs []fasta.Record) http.HandlerFunc {
+func createGenerateHandler(xis []Index, yrs []fasta.Record) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body := r.FormValue("json")
 		var req Request
@@ -56,9 +55,9 @@ func createGenerateHandler(xis []suffixarray.Index, yrs []fasta.Record) http.Han
 		}
 
 		log.Println("/generate requested", req, req.K)
-		points := FindMatch(xis[req.X], req.XA, req.XB, yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K, req.FreqLow, req.FreqUp, req.Revcomp)
+		forward, backward := FindMatch(xis[req.X], req.XA, req.XB, yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K, req.FreqLow, req.FreqUp)
 		log.Println("matching done")
-		plot := Plot{http.StatusOK, "ok", points}
+		plot := Plot{http.StatusOK, "ok", forward, backward}
 
 		res, err := json.Marshal(plot)
 		if err != nil {

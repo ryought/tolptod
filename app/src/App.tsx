@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Dotplots } from './Dotplots'
-import { Dotplot } from './Dotplot'
+import { Dotplot, Points } from './Dotplot'
 import { Region } from './TouchPad'
 import { Config } from './Config'
 import { useDebounce } from './debounce'
@@ -23,7 +23,6 @@ export interface Request {
   k: number
   freqLow: number
   freqUp: number
-  revcomp: boolean
   // bp per px
   scale: number
 }
@@ -64,7 +63,6 @@ function App() {
   const [k, setK] = useState(16)
   const [freqLow, setFreqLow] = useState(1)
   const [freqUp, setFreqUp] = useState(50)
-  const [revcomp, setRevcomp] = useState<boolean>(false)
 
   // touchpad related
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -75,7 +73,8 @@ function App() {
   })
 
   // dotplots
-  const [color, setColor] = useState<string>('#FF0000')
+  const [colorForward, setColorForward] = useState<string>('#FF0000')
+  const [colorBackward, setColorBackward] = useState<string>('#0000FF')
   const [backgroundColor, setBackgroundColor] = useState<string>('#808080')
   const count = useRef<number>(0)
   const [live, setLive] = useState<boolean>(true)
@@ -113,7 +112,6 @@ function App() {
       k,
       freqLow,
       freqUp,
-      revcomp,
       scale,
     }
     const data = new FormData()
@@ -125,12 +123,16 @@ function App() {
     })
       .then((res) => res.json())
       .then((json) => {
-        const points = json.points as [number, number][]
+        const points = {
+          forward: json.forward as [number, number][],
+          backward: json.backward as [number, number][],
+        }
+        // console.log('points', points)
         addPlot(request, points)
       })
       .catch(() => alert('cannot /generate'))
   }
-  const addPlot = (req: Request, points: [number, number][]) => {
+  const addPlot = (req: Request, points: Points) => {
     const { xA, xB, yA, yB, scale } = req
     const width = Math.ceil((xB - xA) / scale)
     const height = Math.ceil((yB - yA) / scale)
@@ -148,7 +150,8 @@ function App() {
           width={width}
           height={height}
           points={points}
-          color={color}
+          colorForward={colorForward}
+          colorBackward={colorBackward}
         />
       ),
     }
@@ -165,7 +168,17 @@ function App() {
   const debounced = useDebounce(requestPlot)
   useEffect(() => {
     if (live) debounced()
-  }, [live, region, queryIndex, targetIndex, k, freqLow, freqUp, color])
+  }, [
+    live,
+    region,
+    queryIndex,
+    targetIndex,
+    k,
+    freqLow,
+    freqUp,
+    colorForward,
+    colorBackward,
+  ])
 
   const style = {
     width: '100vw',
@@ -188,13 +201,12 @@ function App() {
         freqUp={freqUp}
         onChangeFreqUp={setFreqUp}
         // color
-        color={color}
-        onChangeColor={setColor}
+        colorForward={colorForward}
+        onChangeColorForward={setColorForward}
+        colorBackward={colorBackward}
+        onChangeColorBackward={setColorBackward}
         backgroundColor={backgroundColor}
         onChangeBackgroundColor={setBackgroundColor}
-        // revcomp
-        revcomp={revcomp}
-        onChangeRevcomp={setRevcomp}
         // Id related
         targets={targets}
         querys={querys}
