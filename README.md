@@ -1,4 +1,27 @@
-# tolptod
+# Tolptod
+
+interactive dotplot
+
+
+## Usage
+
+Download binary from https://github.com/ryought/tolptod/releases/
+
+```
+$ ssh myServer -L 8080:localhost:8080  # if you want to run server on remote machine
+$ ./tolptod x.fa y.fa
+Parsing x.fa
+Parsing y.fa
+Building suffix array...
+Done
+Server running on :8080...
+```
+
+Then access to localhost:8080 on your browser
+
+![](/docs/usage.png)
+
+## Develop
 
 frontend
 React+typescript
@@ -9,10 +32,3 @@ backend
 Golang
 Load fasta and create suffix array.
 Query sequences to find matches.
-
-
-fasta
-https://github.com/biogo/biogo/blob/v1.0.4/io/seqio/fasta/fasta.go
-
-suffix array package
-https://future-architect.github.io/articles/20200807/
