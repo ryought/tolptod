@@ -28,6 +28,10 @@ func ToCompactDNA(s []byte) []byte {
 	return ret
 }
 
+func Terminals() []byte {
+	return ToCompactDNA([]byte{0, '$', '#', ' '})
+}
+
 // Decode DNA 3bit representation into byte (ASCII code)
 func FromCompactDNA(s []byte) []byte {
 	ret := make([]byte, len(s))

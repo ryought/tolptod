@@ -7,7 +7,8 @@ type DNAWavelet struct {
 func NewDNAWavelet(s []byte, K int) DNAWavelet {
 	t := ToCompactDNA(s)
 	W := 3
-	return DNAWavelet{w: NewCustom(t, K, W)}
+	terminal := Terminals()
+	return DNAWavelet{w: NewCustom(t, K, W, terminal)}
 }
 
 func (w DNAWavelet) Access(i int, K int) []byte {

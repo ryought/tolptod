@@ -12,10 +12,11 @@ import (
 )
 
 type Wavelet struct {
-	bits    [][]byte
-	ranks   [][]int
-	offsets []int
-	width   int
+	bits     [][]byte
+	ranks    [][]int
+	offsets  []int
+	width    int
+	terminal []byte
 }
 
 // i-th (0<=i<8) bit of s[k] (byte uint8).
@@ -53,13 +54,22 @@ func (w Wavelet) N() int {
 	return len(w.bits[0])
 }
 
+func (w Wavelet) IsTerminal(c byte) bool {
+	for _, t := range w.terminal {
+		if c == t {
+			return true
+		}
+	}
+	return false
+}
+
 // Constructor
 func New(s []byte, K int) Wavelet {
-	return NewCustom(s, K, 8)
+	return NewCustom(s, K, 8, []byte{0, '$'})
 }
 
 // constructor
-func NewCustom(s []byte, K int, W int) Wavelet {
+func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 	if W < 1 || W > 8 {
 		panic("W should be 1<=W<=8.")
 	}
@@ -125,7 +135,7 @@ func NewCustom(s []byte, K int, W int) Wavelet {
 	}
 
 	width := W
-	return Wavelet{bits, ranks, offsets, width}
+	return Wavelet{bits, ranks, offsets, width, terminal}
 }
 
 // Create rank array rank[0:n+1) of bytes b[0:n).
@@ -279,7 +289,7 @@ func (w Wavelet) Top(i int, j int, K int) ([]byte, int) {
 		i := s.d % W
 		k := s.d / W
 		if i == 0 && k > 0 {
-			if s.b[k-1] == '$' || s.b[k-1] == 0 {
+			if w.IsTerminal(s.b[k-1]) {
 				// break this intersection
 				continue
 			}
@@ -361,7 +371,7 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 		k := is.d / W
 		if i == 0 && k > 0 {
 			// fmt.Printf("current char %c\n", c)
-			if is.c == '$' || is.c == 0 {
+			if w.IsTerminal(is.c) {
 				// break this intersection
 				continue
 			} else {
