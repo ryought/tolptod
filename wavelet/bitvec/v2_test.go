@@ -40,7 +40,7 @@ func TestV2Bit(t *testing.T) {
 	v.Debug()
 	t.Log("hoge")
 
-	if !bytes.Equal(v.chunks, []byte{0b10100001, 0b10001010}) {
+	if !bytes.Equal(v.chunks, []byte{0b10100001, 0b10001010, 0b00000000}) {
 		t.Error()
 	}
 
@@ -59,7 +59,7 @@ func TestV2Bit(t *testing.T) {
 	v.Set(5, 0)
 	v.Debug()
 
-	if !bytes.Equal(v.chunks, []byte{0b10000001, 0b00001000}) {
+	if !bytes.Equal(v.chunks, []byte{0b10000001, 0b00001000, 0b00000000}) {
 		t.Error()
 	}
 
@@ -89,6 +89,8 @@ func TestV2RankSmall(t *testing.T) {
 		{1, 0},
 		{2, 1},
 		{6, 4},
+		{32, 24},
+		{33, 24},
 	}
 	for _, test := range tests {
 		r := v.Rank(test.i)
@@ -105,9 +107,31 @@ func TestV2RankLarge(t *testing.T) {
 	v.Debug()
 
 	// Since all bits are zero, rank(i)=i for all i.
-	for i := 0; i < 555; i++ {
-		if v.Rank(i) != i {
+	for i := 0; i <= 555; i++ {
+		r := v.Rank(i)
+		t.Logf("rank(i=%d)=%d\n", i, r)
+		if r != i {
 			t.Error()
 		}
+	}
+}
+
+func TestV2RankN16(t *testing.T) {
+	v := NewV2(16)
+	v.Set(0, 1)
+	v.Set(5, 1)
+	v.Set(7, 1)
+	v.Set(9, 1)
+	v.Set(14, 1)
+	v.UpdateRank()
+	v.Debug()
+	if v.Rank(0) != 0 {
+		t.Error()
+	}
+	if v.Rank(6) != 4 {
+		t.Error()
+	}
+	if v.Rank(16) != 11 {
+		t.Error()
 	}
 }

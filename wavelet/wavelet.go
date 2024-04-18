@@ -8,12 +8,12 @@ package wavelet
 
 import (
 	"fmt"
+	"github.com/ryought/tolptod/wavelet/bitvec"
 	// "time"
 )
 
 type Wavelet struct {
-	bits     [][]byte
-	ranks    [][]int
+	bits     []bitvec.BitVecV2
 	offsets  []int
 	width    int
 	terminal []byte
@@ -51,7 +51,7 @@ func (w Wavelet) D() int {
 
 // length of s
 func (w Wavelet) N() int {
-	return len(w.bits[0])
+	return w.bits[0].Size()
 }
 
 func (w Wavelet) IsTerminal(c byte) bool {
@@ -74,8 +74,7 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 		panic("W should be 1<=W<=8.")
 	}
 	D := K * W
-	bits := make([][]byte, D)
-	ranks := make([][]int, D)
+	bits := make([]bitvec.BitVecV2, D)
 	offsets := make([]int, D)
 
 	// X0
@@ -84,27 +83,19 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 	for o := range x {
 		x[o] = o
 	}
-	// B
-	var b []byte
 
 	for k := 0; k < K; k++ {
 		for i := 0; i < W; i++ {
 			// depth
 			d := k*W + i
-			// fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
+			fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
 
 			// B0
 			// t0 := time.Now()
-			b = make([]byte, len(s))
-			offset := 0
-			for o := range b {
-				if ix(s, x[o]+k, i) == 0 {
-					b[o] = 0
-					offset += 1
-				} else {
-					b[o] = 1
-				}
-			}
+			b := bitvec.Build(len(s), func(o int) byte {
+				return ix(s, x[o]+k, i)
+			})
+			offset := b.Rank(len(s))
 			// fmt.Printf("t0 %d ms\n", time.Since(t0).Milliseconds())
 			// fmt.Println(x, "X")
 			// fmt.Println(b, "B", offset)
@@ -113,7 +104,7 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 			// t1 := time.Now()
 			o0, o1 := 0, offset
 			for o := range x {
-				if b[o] == 0 {
+				if b.Get(o) == 0 {
 					tmp[o0] = x[o]
 					o0 += 1
 				} else {
@@ -126,16 +117,12 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 			// fmt.Println(x, "X'")
 
 			bits[d] = b
-			// t2 := time.Now()
-			ranks[d] = createRank(b)
-			// fmt.Printf("t2 %d ms\n", time.Since(t2).Milliseconds())
-			// fmt.Println(ranks[d], "rank")
 			offsets[d] = offset
 		}
 	}
 
 	width := W
-	return Wavelet{bits, ranks, offsets, width, terminal}
+	return Wavelet{bits, offsets, width, terminal}
 }
 
 // Create rank array rank[0:n+1) of bytes b[0:n).
@@ -180,7 +167,7 @@ func (w Wavelet) Access(i int, K int) []byte {
 		var c byte
 		for i := 0; i < W; i++ {
 			d := k*W + i
-			b := w.bits[d][o]
+			b := w.bits[d].Get(o)
 			c = c | (b << i)
 			if b == 1 {
 				// go to right (1).
@@ -196,7 +183,7 @@ func (w Wavelet) Access(i int, K int) []byte {
 				//         offset=4
 				//                 rank1[o]=3
 				//
-				o = w.offsets[d] + o - w.ranks[d][o]
+				o = w.offsets[d] + o - w.bits[d].Rank(o)
 			} else {
 				// go to left (0).
 				//                 o        o=4
@@ -205,7 +192,7 @@ func (w Wavelet) Access(i int, K int) []byte {
 				// B[d]    0 0 0 0 1 1 1 1
 				//         <--->
 				//             o        new o=2
-				o = w.ranks[d][o]
+				o = w.bits[d].Rank(o)
 			}
 			// fmt.Println("newo", o)
 		}
@@ -236,11 +223,11 @@ func (w Wavelet) Rank(i int, query []byte) int {
 				return 0
 			}
 			if b == 1 {
-				oL = w.offsets[d] + oL - w.ranks[d][oL]
-				oR = w.offsets[d] + oR - w.ranks[d][oR]
+				oL = w.offsets[d] + oL - w.bits[d].Rank(oL)
+				oR = w.offsets[d] + oR - w.bits[d].Rank(oR)
 			} else {
-				oL = w.ranks[d][oL]
-				oR = w.ranks[d][oR]
+				oL = w.bits[d].Rank(oL)
+				oR = w.bits[d].Rank(oR)
 			}
 		}
 	}
@@ -305,8 +292,8 @@ func (w Wavelet) Top(i int, j int, K int) ([]byte, int) {
 
 		// to left
 		{
-			oL := w.ranks[s.d][s.oL]
-			oR := w.ranks[s.d][s.oR]
+			oL := w.bits[s.d].Rank(s.oL)
+			oR := w.bits[s.d].Rank(s.oR)
 			if oL < oR {
 				b := clone(s.b)
 				b[k] = b[k] | (0 << i)
@@ -323,8 +310,8 @@ func (w Wavelet) Top(i int, j int, K int) ([]byte, int) {
 
 		// to right
 		{
-			oL := w.offsets[s.d] + s.oL - w.ranks[s.d][s.oL]
-			oR := w.offsets[s.d] + s.oR - w.ranks[s.d][s.oR]
+			oL := w.offsets[s.d] + s.oL - w.bits[s.d].Rank(s.oL)
+			oR := w.offsets[s.d] + s.oR - w.bits[s.d].Rank(s.oR)
 			if oL < oR {
 				b := clone(s.b)
 				b[k] = b[k] | (1 << i)
@@ -385,10 +372,10 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 
 		// to left
 		{
-			aL := w.ranks[is.d][is.aL]
-			aR := w.ranks[is.d][is.aR]
-			bL := w.ranks[is.d][is.bL]
-			bR := w.ranks[is.d][is.bR]
+			aL := w.bits[is.d].Rank(is.aL)
+			aR := w.bits[is.d].Rank(is.aR)
+			bL := w.bits[is.d].Rank(is.bL)
+			bR := w.bits[is.d].Rank(is.bR)
 			d := is.d + 1
 			c := is.c | (0 << i)
 			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
@@ -399,10 +386,10 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 
 		// to right
 		{
-			aL := w.offsets[is.d] + is.aL - w.ranks[is.d][is.aL]
-			aR := w.offsets[is.d] + is.aR - w.ranks[is.d][is.aR]
-			bL := w.offsets[is.d] + is.bL - w.ranks[is.d][is.bL]
-			bR := w.offsets[is.d] + is.bR - w.ranks[is.d][is.bR]
+			aL := w.offsets[is.d] + is.aL - w.bits[is.d].Rank(is.aL)
+			aR := w.offsets[is.d] + is.aR - w.bits[is.d].Rank(is.aR)
+			bL := w.offsets[is.d] + is.bL - w.bits[is.d].Rank(is.bL)
+			bR := w.offsets[is.d] + is.bR - w.bits[is.d].Rank(is.bR)
 			d := is.d + 1
 			c := is.c | (1 << i)
 			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)

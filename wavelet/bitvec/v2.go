@@ -5,10 +5,12 @@ import (
 	"math/bits"
 )
 
-const L = 256
-const S = 8
-const U = L / BYTE
-const BYTE = 8
+const (
+	L    = 256
+	S    = 8
+	U    = L / BYTE
+	BYTE = 8
+)
 
 // Use ~2n bits for ~n bits supporting rank operation
 type BitVecV2 struct {
@@ -18,19 +20,23 @@ type BitVecV2 struct {
 	rankS  []byte // 8bit  x n/S (S=8)   = n
 }
 
-// Perform div a/b then ceil.
-// Equivalent to int(math.Ceil(float(a) / float(b))) but not use float.
-func div(a int, b int) int {
-	return (a + (b - 1)) / b
-}
-
 func NewV2(size int) BitVecV2 {
 	return BitVecV2{
 		size:   size,
-		chunks: make([]byte, div(size, BYTE)),
-		rankL:  make([]int, div(size, L)),
-		rankS:  make([]byte, div(size, S)),
+		chunks: make([]byte, size/BYTE+1),
+		rankL:  make([]int, size/L+1),
+		rankS:  make([]byte, size/S+1),
 	}
+}
+
+// Build BitVecV2 with size and accessor
+func Build(size int, f func(i int) byte) BitVecV2 {
+	bv := NewV2(size)
+	for i := 0; i < size; i++ {
+		bv.Set(i, f(i))
+	}
+	bv.UpdateRank()
+	return bv
 }
 
 func (bv BitVecV2) Size() int {
