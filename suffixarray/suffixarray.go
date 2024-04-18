@@ -239,7 +239,7 @@ func (x *Index) at(i int) []byte {
 
 // lookupAll returns a slice into the matching region of the index.
 // The runtime is O(log(N)*len(s)).
-func (x *Index) lookupAll(s []byte) ints {
+func (x *Index) LookupAll(s []byte) ints {
 	// find matching suffix index range [i:j]
 	// find the first index where s would be the prefix
 	i := sort.Search(x.sa.len(), func(i int) bool { return bytes.Compare(x.at(i), s) >= 0 })
@@ -261,7 +261,7 @@ func (x *Index) SA() []int64 {
 // Find occurrences of s in substring data[a:b] (half-open) (at most n indices)
 func (x *Index) LookupWithin(s []byte, a int, b int, n int) (count int, result []int) {
 	if len(s) > 0 {
-		matches := x.lookupAll(s)
+		matches := x.LookupAll(s)
 		count = matches.len()
 		result = make([]int, 0, n)
 		for i := 0; i < count; i++ {
@@ -289,7 +289,7 @@ func (x *Index) LookupWithin(s []byte, a int, b int, n int) (count int, result [
 // size of the indexed data.
 func (x *Index) Lookup(s []byte, n int) (result []int) {
 	if len(s) > 0 && n != 0 {
-		matches := x.lookupAll(s)
+		matches := x.LookupAll(s)
 		count := matches.len()
 		if n < 0 || count < n {
 			n = count

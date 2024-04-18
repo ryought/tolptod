@@ -85,10 +85,10 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 	}
 
 	for k := 0; k < K; k++ {
+		fmt.Printf("k=%d\n", k)
 		for i := 0; i < W; i++ {
 			// depth
 			d := k*W + i
-			fmt.Printf("k=%d i=%d d=%d\n", k, i, d)
 
 			// B0
 			// t0 := time.Now()
@@ -96,7 +96,7 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 				return ix(s, x[o]+k, i)
 			})
 			offset := b.Rank(len(s))
-			// fmt.Printf("t0 %d ms\n", time.Since(t0).Milliseconds())
+			// fmt.Printf("bitvec in %d ms\n", time.Since(t0).Milliseconds())
 			// fmt.Println(x, "X")
 			// fmt.Println(b, "B", offset)
 
@@ -112,7 +112,7 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 					o1 += 1
 				}
 			}
-			// fmt.Printf("t1 %d ms\n", time.Since(t1).Milliseconds())
+			// fmt.Printf("sort in %d ms\n", time.Since(t1).Milliseconds())
 			x, tmp = tmp, x
 			// fmt.Println(x, "X'")
 

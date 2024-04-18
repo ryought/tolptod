@@ -3,7 +3,7 @@ package wavelet
 import (
 	"bytes"
 	"github.com/ryought/tolptod/rand"
-	"index/suffixarray"
+	"github.com/ryought/tolptod/suffixarray"
 	"testing"
 	"time"
 )
@@ -14,11 +14,11 @@ func TestWaveletLarge(t *testing.T) {
 	}
 
 	ns := []int{
-		1_000, // 1KB
-		10_000,
-		100_000,
-		1_000_000, // 1MB
-		// 10_000_000,
+		// 1_000, // 1KB
+		// 10_000,
+		// 100_000,
+		// 1_000_000, // 1MB
+		10_000_000, // 10MB
 	}
 
 	for _, n := range ns {
@@ -26,12 +26,12 @@ func TestWaveletLarge(t *testing.T) {
 		t.Log(n)
 
 		t0 := time.Now()
-		K := 100
+		K := 10
 		w := NewDNAWavelet(s, K)
 		t.Logf("wave %d ms", time.Since(t0).Milliseconds())
 
 		t1 := time.Now()
-		suffixarray.New(s)
+		sa := suffixarray.New(s)
 		t.Logf("sais %d ms", time.Since(t1).Milliseconds())
 
 		x := w.Access(10, K)
@@ -39,6 +39,15 @@ func TestWaveletLarge(t *testing.T) {
 			t.Error()
 		}
 
+		t2 := time.Now()
+		a, b := w.Intersect(0, n/2, n/2, n, 10)
+		t.Log(a, b)
+		t.Logf("wave intersect %d ms", time.Since(t2).Milliseconds())
+
+		t3 := time.Now()
+		a, b = sa.Intersect(0, n/2, n/2, n, 10)
+		t.Log(a, b)
+		t.Logf("sais intersect %d ms", time.Since(t3).Milliseconds())
 	}
 }
 
