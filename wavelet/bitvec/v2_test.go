@@ -31,7 +31,7 @@ func TestCountZeros(t *testing.T) {
 
 func TestCreateChunk(t *testing.T) {
 	b := [64]byte{0, 1, 0, 1, 1, 1, 0, 1}
-	chunk := createChunk(func(i int) byte { return b[i] })
+	chunk := createChunk(b)
 	t.Logf("%08b", chunk)
 	if chunk != 0b_1011_1010 {
 		t.Error()

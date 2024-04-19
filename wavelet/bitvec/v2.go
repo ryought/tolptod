@@ -38,9 +38,7 @@ func Build(size int, f func(i int) byte) BitVecV2 {
 		// fill chunks for each S=64 bits
 		for index := 0; index < size/S; index++ {
 			offset := index * S
-			bv.SetChunk(index, createChunk(func(i int) byte {
-				return f(offset + i)
-			}))
+			bv.SetChunk(index, createChunk(apply64(f, offset)))
 		}
 		// fill the last chunk for each 1 bits..
 		for i := (size / S) * S; i < size; i++ {
@@ -92,12 +90,20 @@ func (bv BitVecV2) Set(i int, x byte) {
 // createChunk
 // bits = [0,1,0,1,0,0,...]
 // bits[i] is offset i
-func createChunk(bits func(i int) byte) uint64 {
+func createChunk(bits [S]byte) uint64 {
 	var chunk uint64
 	for i := 0; i < S; i++ {
-		chunk |= uint64(bits(i)) << i
+		chunk |= uint64(bits[i]) << i
 	}
 	return chunk
+}
+
+func apply64(f func(i int) byte, offset int) [64]byte {
+	var ret [64]byte
+	for i := 0; i < 64; i++ {
+		ret[i] = f(offset + 1)
+	}
+	return ret
 }
 
 func (bv BitVecV2) SetChunk(index int, chunk uint64) {
