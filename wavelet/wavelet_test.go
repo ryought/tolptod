@@ -2,6 +2,7 @@ package wavelet
 
 import (
 	"bytes"
+	"github.com/ryought/tolptod/rand"
 	"slices"
 	"testing"
 )
@@ -207,5 +208,21 @@ func TestIntersection(t *testing.T) {
 	{
 		a, b := w.Intersect(5, 10, 0, 10, 2)
 		t.Log(a, b)
+	}
+}
+
+func TestWithRandomDNA(t *testing.T) {
+	n := 10_000
+	s := rand.RandomDNA(n)
+	w := NewDNAWavelet(s, 40)
+
+	// K=2
+	K := []int{1, 2, 4, 10, 33, 40}
+	for _, k := range K {
+		for i := 0; i <= n-k; i++ {
+			if !bytes.Equal(s[i:i+k], w.Access(i, k)) {
+				t.Errorf("wrong access(i=%d, k=%d)", i, k)
+			}
+		}
 	}
 }
