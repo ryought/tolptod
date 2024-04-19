@@ -6,7 +6,7 @@ import (
 )
 
 func BenchmarkWavelet1MB(b *testing.B) {
-	n := 1_000_000 // 1MB
+	n := 10_000_000 // 10MB
 	K := 30
 	s := rand.RandomDNA(n)
 	b.Log("build")
