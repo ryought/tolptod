@@ -6,25 +6,25 @@ import (
 )
 
 const (
-	L               = 256
-	S               = 8
-	U               = L / BYTE
-	BYTE            = 8
+	L               = 256 // rankS is []byte, so maximum number is 256
+	S               = 64  // if use uint64 to store bits, S=64
+	U               = L / S
 	USE_BATCH_BUILD = true
 )
 
+// BitVec2
 // Use ~2n bits for ~n bits supporting rank operation
 type BitVecV2 struct {
-	size   int    // n
-	chunks []byte // 1bit  x n           = n
-	rankL  []int  // 64bit x n/L (L=256) = n/4
-	rankS  []byte // 8bit  x n/S (S=8)   = n
+	size   int      // n
+	chunks []uint64 // 1bit  x n          = n  (as 64bit x n/64)
+	rankL  []int    // 64bit x n/L (=256) = n/4
+	rankS  []byte   // 8bit  x n/S (=64)  = n/8
 }
 
 func NewV2(size int) BitVecV2 {
 	return BitVecV2{
 		size:   size,
-		chunks: make([]byte, size/BYTE+1),
+		chunks: make([]uint64, size/S+1),
 		rankL:  make([]int, size/L+1),
 		rankS:  make([]byte, size/S+1),
 	}
@@ -35,22 +35,15 @@ func Build(size int, f func(i int) byte) BitVecV2 {
 	bv := NewV2(size)
 
 	if USE_BATCH_BUILD {
-		// fill chunks for each 8 bits
-		for index := 0; index < size/BYTE; index++ {
-			i := index * 8
-			bv.SetChunk(index, createChunk([8]byte{
-				f(i),
-				f(i + 1),
-				f(i + 2),
-				f(i + 3),
-				f(i + 4),
-				f(i + 5),
-				f(i + 6),
-				f(i + 7),
+		// fill chunks for each S=64 bits
+		for index := 0; index < size/S; index++ {
+			offset := index * S
+			bv.SetChunk(index, createChunk(func(i int) byte {
+				return f(offset + i)
 			}))
 		}
 		// fill the last chunk for each 1 bits..
-		for i := (size / BYTE) * BYTE; i < size; i++ {
+		for i := (size / S) * S; i < size; i++ {
 			bv.Set(i, f(i))
 		}
 	} else {
@@ -72,17 +65,17 @@ func (bv BitVecV2) Debug() {
 	fmt.Printf("size=%d\n", bv.size)
 	for i := range bv.chunks {
 		if i%U == 0 {
-			fmt.Printf("%d\t%08b\t%d\t%d\n", i, bv.chunks[i], bv.rankL[i/U], bv.rankS[i])
+			fmt.Printf("%d\t%064b\t%d\t%d\n", i, bv.chunks[i], bv.rankL[i/U], bv.rankS[i])
 		} else {
-			fmt.Printf("%d\t%08b\t-\t%d\n", i, bv.chunks[i], bv.rankS[i])
+			fmt.Printf("%d\t%064b\t-\t%d\n", i, bv.chunks[i], bv.rankS[i])
 		}
 	}
 	fmt.Printf("********\n")
 }
 
-// Get i/8 and i%8
+// Get i/64 and i%64
 func address(i int) (int, int) {
-	return i >> 3, i & 0b111
+	return i >> 6, i & 0b111111
 }
 
 func (bv BitVecV2) Set(i int, x byte) {
@@ -97,29 +90,24 @@ func (bv BitVecV2) Set(i int, x byte) {
 }
 
 // createChunk
-// bits = [0,1,0,1,0,0]
+// bits = [0,1,0,1,0,0,...]
 // bits[i] is offset i
-func createChunk(bits [8]byte) byte {
-	var chunk byte
-	chunk |= bits[0] << 0
-	chunk |= bits[1] << 1
-	chunk |= bits[2] << 2
-	chunk |= bits[3] << 3
-	chunk |= bits[4] << 4
-	chunk |= bits[5] << 5
-	chunk |= bits[6] << 6
-	chunk |= bits[7] << 7
+func createChunk(bits func(i int) byte) uint64 {
+	var chunk uint64
+	for i := 0; i < S; i++ {
+		chunk |= uint64(bits(i)) << i
+	}
 	return chunk
 }
 
-func (bv BitVecV2) SetChunk(index int, chunk byte) {
+func (bv BitVecV2) SetChunk(index int, chunk uint64) {
 	bv.chunks[index] = chunk
 }
 
 func (bv BitVecV2) Get(i int) byte {
 	index, offset := address(i)
 	chunk := bv.chunks[index]
-	return (chunk >> offset) & 1
+	return byte((chunk >> offset) & 1)
 }
 
 func (bv BitVecV2) UpdateRank() {
@@ -131,7 +119,7 @@ func (bv BitVecV2) UpdateRank() {
 			rankL = rank
 		}
 		bv.rankS[k] = byte(rank - rankL)
-		rank += BYTE - bits.OnesCount8(chunk)
+		rank += S - bits.OnesCount64(chunk)
 	}
 }
 
@@ -142,9 +130,9 @@ func (bv BitVecV2) UpdateRank() {
 // offset=4
 //
 // 0b_1111_0000 mask
-func countZeros(b byte, offset int) int {
-	mask := byte(^((1 << offset) - 1))
-	return BYTE - bits.OnesCount8(b|mask)
+func countZeros(b uint64, offset int) int {
+	var mask uint64 = ^((1 << offset) - 1)
+	return S - bits.OnesCount64(b|mask)
 }
 
 // Count zeros in [0:i)

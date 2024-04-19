@@ -1,7 +1,7 @@
 package bitvec
 
 import (
-	"bytes"
+	// "bytes"
 	"testing"
 )
 
@@ -30,7 +30,8 @@ func TestCountZeros(t *testing.T) {
 }
 
 func TestCreateChunk(t *testing.T) {
-	chunk := createChunk([8]byte{0, 1, 0, 1, 1, 1, 0, 1})
+	b := [64]byte{0, 1, 0, 1, 1, 1, 0, 1}
+	chunk := createChunk(func(i int) byte { return b[i] })
 	t.Logf("%08b", chunk)
 	if chunk != 0b_1011_1010 {
 		t.Error()
@@ -48,10 +49,6 @@ func TestV2Bit(t *testing.T) {
 	v.Debug()
 	t.Log("hoge")
 
-	if !bytes.Equal(v.chunks, []byte{0b10100001, 0b10001010, 0b00000000}) {
-		t.Error()
-	}
-
 	xs := []byte{
 		1, 0, 0, 0, 0, 1, 0, 1, //
 		0, 1, 0, 1, 0, 0, 0, 1, //
@@ -67,8 +64,14 @@ func TestV2Bit(t *testing.T) {
 	v.Set(5, 0)
 	v.Debug()
 
-	if !bytes.Equal(v.chunks, []byte{0b10000001, 0b00001000, 0b00000000}) {
-		t.Error()
+	xs = []byte{
+		1, 0, 0, 0, 0, 0, 0, 1, //
+		0, 0, 0, 1, 0, 0, 0, 0, //
+	}
+	for i, x := range xs {
+		if v.Get(i) != x {
+			t.Error()
+		}
 	}
 
 	v.UpdateRank()
