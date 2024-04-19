@@ -1,6 +1,7 @@
 package suffixarray
 
 func (x *Index) Intersect(aL, aR, bL, bR int, K int) (int, int) {
+	A, B := 0, 0
 	for a := aL; a < min(aR, len(x.data)-K); a++ {
 		kmer := x.data[a : a+K]
 		na, nb := 0, 0
@@ -24,10 +25,12 @@ func (x *Index) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 		}
 
 		if na > 0 && nb > 0 {
-			return na, nb
+			if A < na && B < nb {
+				A, B = na, nb
+			}
 		}
 	}
 
 	// not found
-	return 0, 0
+	return A, B
 }
