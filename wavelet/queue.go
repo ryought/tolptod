@@ -58,3 +58,21 @@ func (q *Queue) Pop() any {
 	*q = old[0 : n-1]
 	return item
 }
+
+func NewStack() Queue {
+	q := make(Queue, 0, 1024)
+	return q
+}
+
+func (q *Queue) StackPop() *Intersection {
+	old := *q
+	n := len(old)
+	item := old[n-1]
+	old[n-1] = nil
+	*q = old[0 : n-1]
+	return item
+}
+
+func (q *Queue) StackPush(is Intersection) {
+	q.Push(&is)
+}
