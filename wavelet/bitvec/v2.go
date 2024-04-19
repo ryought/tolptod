@@ -6,10 +6,11 @@ import (
 )
 
 const (
-	L    = 256
-	S    = 8
-	U    = L / BYTE
-	BYTE = 8
+	L               = 256
+	S               = 8
+	U               = L / BYTE
+	BYTE            = 8
+	USE_BATCH_BUILD = true
 )
 
 // Use ~2n bits for ~n bits supporting rank operation
@@ -33,23 +34,29 @@ func NewV2(size int) BitVecV2 {
 func Build(size int, f func(i int) byte) BitVecV2 {
 	bv := NewV2(size)
 
-	// fill chunks for each 8 bits
-	for index := 0; index < size/BYTE; index++ {
-		i := index * 8
-		bv.SetChunk(index, createChunk([8]byte{
-			f(i),
-			f(i + 1),
-			f(i + 2),
-			f(i + 3),
-			f(i + 4),
-			f(i + 5),
-			f(i + 6),
-			f(i + 7),
-		}))
-	}
-	// fill the last chunk for each 1 bits..
-	for i := (size / BYTE) * BYTE; i < size; i++ {
-		bv.Set(i, f(i))
+	if USE_BATCH_BUILD {
+		// fill chunks for each 8 bits
+		for index := 0; index < size/BYTE; index++ {
+			i := index * 8
+			bv.SetChunk(index, createChunk([8]byte{
+				f(i),
+				f(i + 1),
+				f(i + 2),
+				f(i + 3),
+				f(i + 4),
+				f(i + 5),
+				f(i + 6),
+				f(i + 7),
+			}))
+		}
+		// fill the last chunk for each 1 bits..
+		for i := (size / BYTE) * BYTE; i < size; i++ {
+			bv.Set(i, f(i))
+		}
+	} else {
+		for i := 0; i < size; i++ {
+			bv.Set(i, f(i))
+		}
 	}
 
 	bv.UpdateRank()

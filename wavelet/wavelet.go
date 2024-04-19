@@ -85,7 +85,7 @@ func NewCustom(s []byte, K int, W int, terminal []byte) Wavelet {
 	}
 
 	for k := 0; k < K; k++ {
-		fmt.Printf("k=%d\n", k)
+		// fmt.Printf("k=%d\n", k)
 		for i := 0; i < W; i++ {
 			// depth
 			d := k*W + i
