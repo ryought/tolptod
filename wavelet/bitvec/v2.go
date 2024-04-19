@@ -32,9 +32,26 @@ func NewV2(size int) BitVecV2 {
 // Build BitVecV2 with size and accessor
 func Build(size int, f func(i int) byte) BitVecV2 {
 	bv := NewV2(size)
-	for i := 0; i < size; i++ {
+
+	// fill chunks for each 8 bits
+	for index := 0; index < size/BYTE; index++ {
+		i := index * 8
+		bv.SetChunk(index, createChunk([8]byte{
+			f(i),
+			f(i + 1),
+			f(i + 2),
+			f(i + 3),
+			f(i + 4),
+			f(i + 5),
+			f(i + 6),
+			f(i + 7),
+		}))
+	}
+	// fill the last chunk for each 1 bits..
+	for i := (size / BYTE) * BYTE; i < size; i++ {
 		bv.Set(i, f(i))
 	}
+
 	bv.UpdateRank()
 	return bv
 }
@@ -69,6 +86,26 @@ func (bv BitVecV2) Set(i int, x byte) {
 	} else {
 		chunk = chunk | (1 << offset)
 	}
+	bv.chunks[index] = chunk
+}
+
+// createChunk
+// bits = [0,1,0,1,0,0]
+// bits[i] is offset i
+func createChunk(bits [8]byte) byte {
+	var chunk byte
+	chunk |= bits[0] << 0
+	chunk |= bits[1] << 1
+	chunk |= bits[2] << 2
+	chunk |= bits[3] << 3
+	chunk |= bits[4] << 4
+	chunk |= bits[5] << 5
+	chunk |= bits[6] << 6
+	chunk |= bits[7] << 7
+	return chunk
+}
+
+func (bv BitVecV2) SetChunk(index int, chunk byte) {
 	bv.chunks[index] = chunk
 }
 

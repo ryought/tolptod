@@ -29,6 +29,14 @@ func TestCountZeros(t *testing.T) {
 	}
 }
 
+func TestCreateChunk(t *testing.T) {
+	chunk := createChunk([8]byte{0, 1, 0, 1, 1, 1, 0, 1})
+	t.Logf("%08b", chunk)
+	if chunk != 0b_1011_1010 {
+		t.Error()
+	}
+}
+
 func TestV2Bit(t *testing.T) {
 	v := NewV2(16)
 	v.Set(0, 1)
@@ -134,4 +142,44 @@ func TestV2RankN16(t *testing.T) {
 	if v.Rank(16) != 11 {
 		t.Error()
 	}
+}
+
+func TestV2Build(t *testing.T) {
+	n := 34
+	x := []byte{
+		0, 1, 0, 0, 1, 0, 1, 0, // 8
+		1, 0, 1, 0, 0, 0, 0, 1, // 16
+		0, 1, 0, 1, 1, 1, 0, 1, // 24
+		1, 1, 1, 0, 0, 0, 1, 1, // 32
+		0, 1, // 34
+	}
+	if len(x) != n {
+		t.Error()
+	}
+	v := Build(n, func(i int) byte { return x[i] })
+	v.Debug()
+
+	t.Log("get")
+	for i := 0; i < n; i++ {
+		if x[i] != v.Get(i) {
+			t.Errorf("Get: x[i=%d]=%d != %d", i, v.Get(i), x[i])
+		}
+	}
+
+	t.Log("rank")
+	for i := 0; i <= n; i++ {
+		if naiveRank(x[:i]) != v.Rank(i) {
+			t.Error("rank is different", i)
+		}
+	}
+}
+
+func naiveRank(b []byte) int {
+	rank := 0
+	for i := range b {
+		if b[i] == 0 {
+			rank += 1
+		}
+	}
+	return rank
 }

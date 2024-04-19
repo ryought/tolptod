@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestWaveletLarge(t *testing.T) {
+func TestWaveletVsSuffixArray(t *testing.T) {
 	if testing.Short() {
 		t.SkipNow()
 	}
