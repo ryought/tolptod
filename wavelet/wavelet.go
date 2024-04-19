@@ -347,11 +347,11 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 	q := NewQueue()
 	d := 0
 	var c byte
-	q.Push(Intersection{aL, aR, bL, bR, d, c})
+	q.HeapPush(Intersection{aL, aR, bL, bR, d, c})
 
 	W := w.W()
 	for q.Len() > 0 {
-		is := q.Pop()
+		is := q.HeapPop()
 		// fmt.Printf("poped [%d,%d) [%d,%d) d=%d\n", is.aL, is.aR, is.bL, is.bR, is.d)
 
 		i := is.d % W
@@ -380,7 +380,7 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 			c := is.c | (0 << i)
 			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
 			if aL < aR && bL < bR {
-				q.Push(Intersection{aL, aR, bL, bR, d, c})
+				q.HeapPush(Intersection{aL, aR, bL, bR, d, c})
 			}
 		}
 
@@ -394,7 +394,7 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 			c := is.c | (1 << i)
 			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
 			if aL < aR && bL < bR {
-				q.Push(Intersection{aL, aR, bL, bR, d, c})
+				q.HeapPush(Intersection{aL, aR, bL, bR, d, c})
 			}
 		}
 	}
