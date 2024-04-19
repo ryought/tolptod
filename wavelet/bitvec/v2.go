@@ -101,7 +101,7 @@ func createChunk(bits [S]byte) uint64 {
 func apply64(f func(i int) byte, offset int) [64]byte {
 	var ret [64]byte
 	for i := 0; i < 64; i++ {
-		ret[i] = f(offset + 1)
+		ret[i] = f(offset + i)
 	}
 	return ret
 }

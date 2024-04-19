@@ -36,7 +36,7 @@ func TestWaveletVsSuffixArray(t *testing.T) {
 
 		x := w.Access(10, K)
 		if !bytes.Equal(x, s[10:10+K]) {
-			t.Error()
+			t.Errorf("Access(10, K) is not %s but %s", string(x), string(s[10:10+K]))
 		}
 
 		t2 := time.Now()
