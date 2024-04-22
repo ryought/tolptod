@@ -3,6 +3,7 @@ package wavelet
 import (
 	"github.com/ryought/tolptod/rand"
 	"testing"
+	"time"
 )
 
 func TestIntWavelet(t *testing.T) {
@@ -16,8 +17,37 @@ func TestIntWavelet(t *testing.T) {
 	t.Log(w.Intersect(0, 4, 9, 13))
 }
 
+func TestIntWaveletBySize(t *testing.T) {
+	if testing.Short() {
+		t.SkipNow()
+	}
+
+	ns := []int{
+		1_000,
+		10_000,
+		100_000,
+		1_000_000,
+		10_000_000,
+		100_000_000,
+	}
+
+	for _, n := range ns {
+		x := rand.RandomUint64(n, 2<<15)
+		t0 := time.Now()
+		w := NewIntWavelet(x, 15)
+		t.Logf("%d\t%d us", n, time.Since(t0).Microseconds())
+
+		t1 := time.Now()
+		for i := 0; i < 100; i++ {
+			w.Intersect(0, n/2, n/2, n)
+		}
+		t.Logf("%d\t%d us", n, time.Since(t1).Microseconds())
+		// t.Log(n)
+	}
+}
+
 func BenchmarkIntWavelet(b *testing.B) {
-	n := 100_000_000
+	n := 10_000_000
 	x := rand.RandomUint64(n, 10_000)
 	w := NewIntWavelet(x, 15)
 	b.StartTimer()

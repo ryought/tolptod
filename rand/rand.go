@@ -21,6 +21,7 @@ func RandomByte(n int) (ret []byte) {
 	return
 }
 
+// generate x[0,n) s.t. x[i] is random number in [0,m)
 func RandomUint64(n int, m int64) (ret []int64) {
 	r := rand.New(rand.NewSource(0))
 	ret = make([]int64, n)
