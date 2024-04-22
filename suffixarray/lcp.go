@@ -1,6 +1,6 @@
 package suffixarray
 
-import "fmt"
+// import "fmt"
 
 // create LCP array
 func (x *Index) LCP() []int64 {

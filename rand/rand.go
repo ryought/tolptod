@@ -20,3 +20,12 @@ func RandomByte(n int) (ret []byte) {
 	}
 	return
 }
+
+func RandomUint64(n int, m int64) (ret []int64) {
+	r := rand.New(rand.NewSource(0))
+	ret = make([]int64, n)
+	for i := range ret {
+		ret[i] = r.Int63n(m)
+	}
+	return
+}
