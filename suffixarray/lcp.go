@@ -6,7 +6,6 @@ import "fmt"
 func (x *Index) LCP() []int64 {
 	sa := x.SA()
 	s := x.data
-	fmt.Println("sa", len(sa), len(s))
 
 	// sa[r] = i means that suffix S[i:] is r-th in suffix array.
 	// rank[i] = r
@@ -35,4 +34,25 @@ func (x *Index) LCP() []int64 {
 	}
 
 	return lcp
+}
+
+func (x *Index) KmerMatches(LCP []int64, K int) ([]int64, int64) {
+	sa := x.SA()
+	var kmerId int64
+	inRun := false
+	matches := make([]int64, len(sa))
+
+	for i := 0; i < len(sa); i++ {
+		if LCP[i] >= int64(K) {
+			if !inRun {
+				kmerId += 1
+				inRun = true
+				matches[sa[i-1]] = kmerId
+			}
+			matches[sa[i]] = kmerId
+		} else {
+			inRun = false
+		}
+	}
+	return matches, kmerId
 }
