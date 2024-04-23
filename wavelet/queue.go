@@ -17,6 +17,10 @@ func (is Intersection) Priority() int {
 	return min(is.aR-is.aL, is.bR-is.bL)
 }
 
+func (is Intersection) IsOpen() bool {
+	return is.aL < is.aR && is.bL < is.bR
+}
+
 type Queue []*Intersection
 
 func NewQueue() Queue {

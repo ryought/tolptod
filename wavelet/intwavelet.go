@@ -142,31 +142,37 @@ func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int, int) {
 		}
 
 		// to left
-		{
-			aL := w.bits[is.d].Rank(is.aL)
-			aR := w.bits[is.d].Rank(is.aR)
-			bL := w.bits[is.d].Rank(is.bL)
-			bR := w.bits[is.d].Rank(is.bR)
-			d := is.d + 1
-			c := is.c | (0 << d)
-			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
-			if aL < aR && bL < bR {
-				q.StackPush(Intersection{aL, aR, bL, bR, d, c})
-			}
+		isL := Intersection{
+			aL: w.bits[is.d].Rank(is.aL),
+			aR: w.bits[is.d].Rank(is.aR),
+			bL: w.bits[is.d].Rank(is.bL),
+			bR: w.bits[is.d].Rank(is.bR),
+			d:  is.d + 1,
+			c:  is.c | (0 << is.d),
 		}
 
 		// to right
-		{
-			aL := w.offsets[is.d] + is.aL - w.bits[is.d].Rank(is.aL)
-			aR := w.offsets[is.d] + is.aR - w.bits[is.d].Rank(is.aR)
-			bL := w.offsets[is.d] + is.bL - w.bits[is.d].Rank(is.bL)
-			bR := w.offsets[is.d] + is.bR - w.bits[is.d].Rank(is.bR)
-			d := is.d + 1
-			c := is.c | (1 << d)
-			// fmt.Printf("L [%d,%d) [%d,%d) d=%d\n", aL, aR, bL, bR, d)
-			if aL < aR && bL < bR {
-				q.StackPush(Intersection{aL, aR, bL, bR, d, c})
+		isR := Intersection{
+			aL: w.offsets[is.d] + is.aL - w.bits[is.d].Rank(is.aL),
+			aR: w.offsets[is.d] + is.aR - w.bits[is.d].Rank(is.aR),
+			bL: w.offsets[is.d] + is.bL - w.bits[is.d].Rank(is.bL),
+			bR: w.offsets[is.d] + is.bR - w.bits[is.d].Rank(is.bR),
+			d:  is.d + 1,
+			c:  is.c | (1 << is.d),
+		}
+
+		if isL.IsOpen() && isR.IsOpen() {
+			if isL.Priority() > isR.Priority() {
+				q.StackPush(isR)
+				q.StackPush(isL)
+			} else {
+				q.StackPush(isL)
+				q.StackPush(isR)
 			}
+		} else if isL.IsOpen() {
+			q.StackPush(isL)
+		} else if isR.IsOpen() {
+			q.StackPush(isR)
 		}
 	}
 

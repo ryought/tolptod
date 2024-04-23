@@ -38,10 +38,11 @@ func TestIntWaveletBySize(t *testing.T) {
 		t.Logf("%d\t%d us", n, time.Since(t0).Microseconds())
 
 		t1 := time.Now()
-		for i := 0; i < 100; i++ {
+		N := 100
+		for i := 0; i < N; i++ {
 			w.Intersect(0, n/2, n/2, n)
 		}
-		t.Logf("%d\t%d us", n, time.Since(t1).Microseconds())
+		t.Logf("%d\t%d us", n, time.Since(t1).Microseconds()/int64(N))
 		// t.Log(n)
 	}
 }
@@ -50,7 +51,9 @@ func BenchmarkIntWavelet(b *testing.B) {
 	n := 10_000_000
 	x := rand.RandomUint64(n, 10_000)
 	w := NewIntWavelet(x, 15)
-	b.StartTimer()
+
+	// b.StartTimer()
+	b.ResetTimer()
 	w.Intersect(0, n/2, n/2, n)
-	b.StopTimer()
+	// b.StopTimer()
 }
