@@ -41,6 +41,33 @@ func (m Matrix) Drain() []Point {
 	}
 	return points
 }
+func (m Matrix) Print() {
+	for Y := 0; Y < m.Y; Y++ {
+		for X := 0; X < m.X; X++ {
+			if m.Get(X, Y) {
+				fmt.Printf("1 ")
+			} else {
+				fmt.Printf("0 ")
+			}
+		}
+		fmt.Printf("\n")
+	}
+}
+
+func (m Matrix) Equal(m2 Matrix) bool {
+	// size should be the same
+	if !(m.X == m2.X && m.Y == m2.Y) {
+		return false
+	}
+	for X := 0; X < m.X; X++ {
+		for Y := 0; Y < m.Y; Y++ {
+			if m.Get(X, Y) != m2.Get(X, Y) {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 type Point struct {
 	X int
