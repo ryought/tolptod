@@ -1,2 +1,4 @@
 tolptod
 dist/
+*.prof
+*.test

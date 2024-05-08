@@ -44,6 +44,14 @@ func RevComp(b []byte) []byte {
 	return ret
 }
 
+func Join(S []byte, T []byte) []byte {
+	ret := make([]byte, len(S)+len(T)+1)
+	copy(ret[:len(S)], S)
+	ret[len(S)] = '$'
+	copy(ret[len(S)+1:len(S)+len(T)+1], T)
+	return ret
+}
+
 func Parse(f io.Reader) ([]Record, error) {
 	records := make([]Record, 0)
 	r := bufio.NewReader(f)

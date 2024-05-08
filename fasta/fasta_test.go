@@ -29,6 +29,11 @@ func TestIsDNA(t *testing.T) {
 	}
 }
 
+func TestJoin(t *testing.T) {
+	r := Join([]byte("ATCGA"), []byte("CTATTA"))
+	bytes.Equal(r, []byte("ATCGA$CTATTA"))
+}
+
 func TestParseFasta(t *testing.T) {
 	const multiFasta = `
 	>SequenceA hogehoge fugafuga
