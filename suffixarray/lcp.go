@@ -36,6 +36,7 @@ func (x *Index) LCP() []int64 {
 	return lcp
 }
 
+// returns (arr, kmerId)
 func (x *Index) KmerMatches(LCP []int64, K int) ([]int64, int64) {
 	sa := x.SA()
 	var kmerId int64

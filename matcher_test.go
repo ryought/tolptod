@@ -5,7 +5,30 @@ import (
 	"testing"
 )
 
-func TestMatcher(t *testing.T) {
+func TestBits(t *testing.T) {
+	tests := []struct {
+		x    int64
+		bits int
+	}{
+		{0b000, 0},
+		{0b001, 1},
+		{0b010, 2},
+		{0b011, 2},
+		{0b011, 2},
+		{0b100, 3},
+		{0b101, 3},
+		{0b110, 3},
+		{0b111, 3},
+	}
+	for _, test := range tests {
+		t.Log(test.x, Bits(test.x), test.bits)
+		if Bits(test.x) != test.bits {
+			t.Error()
+		}
+	}
+}
+
+func TestMatcherSA(t *testing.T) {
 	S := []byte("ATGGATCGG")
 	N := len(S)
 	// m := NewMatcherSA(S, fasta.RevComp(S))
@@ -48,4 +71,21 @@ func TestMatcher(t *testing.T) {
 	F.Print()
 	t.Log("B")
 	B.Print()
+}
+
+func TestMatcherWT(t *testing.T) {
+	S := []byte("ATGGATCGG")
+	N := len(S)
+	K := 4
+	m := NewMatcherWT(S, S, K)
+
+	// W=1
+	F, B := m.Match(1, 0, N, 0, N)
+	t.Logf("S =%s", S)
+	t.Logf("S'=%s", fasta.RevComp(S))
+	t.Log("F")
+	F.Print()
+	t.Log("B")
+	B.Print()
+	t.Log("hoge")
 }

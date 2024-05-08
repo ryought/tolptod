@@ -31,13 +31,28 @@ func NewMatcherSA(S []byte, T []byte) MatcherSA {
 	return m
 }
 
-func FloorDiv(x int, y int) int {
+// ceil(float(x)/float(y))
+func CeilDiv(x int, y int) int {
 	// if x > 0 {
 	// 	return 1 + (x-1)/y
 	// } else {
 	// 	return x / y
 	// }
 	return 1 + (x-1)/y
+}
+
+// ceil(log2(x))
+func Bits(x int64) int {
+	var y int64
+	i := 0
+	for i < 64 {
+		if x <= y {
+			break
+		}
+		y = (y << 1) + 1
+		i += 1
+	}
+	return i
 }
 
 // between S[xL:xR] and T[yL:yR]
@@ -56,8 +71,8 @@ func (m MatcherSA) Match(W int, xL, xR, yL, yR int, K int, freqLow int, freqUp i
 	if yL < 0 || yR > Y {
 		panic("[yL:yR] out of range")
 	}
-	nx := FloorDiv(xR-xL, W)
-	ny := FloorDiv(yR-yL, W)
+	nx := CeilDiv(xR-xL, W)
+	ny := CeilDiv(yR-yL, W)
 	MF := NewMatrix(nx, ny)
 	MB := NewMatrix(nx, ny)
 
@@ -88,15 +103,44 @@ type MatcherWT struct {
 }
 
 func NewMatcherWT(S []byte, T []byte, K int) MatcherWT {
-	// S#T$ and S#rev(T)$
-	index := suffixarray.New(fasta.Join(S, T))
-	LCP := index.LCP()
-	kmers, _ := index.KmerMatches(LCP, K)
-	w := wavelet.NewIntWavelet(kmers, 15)
+	// Forward: S$T
+	indexF := suffixarray.New(fasta.Join(S, T))
+	LCPF := indexF.LCP()
+	kmersF, maxKmerF := indexF.KmerMatches(LCPF, K)
+	fmt.Println("maxKmerF", maxKmerF)
+	wF := wavelet.NewIntWavelet(kmersF, Bits(maxKmerF))
+
+	// Backward: S$rev(T)
+	indexB := suffixarray.New(fasta.Join(S, fasta.RevComp(T)))
+	LCPB := indexB.LCP()
+	kmersB, maxKmerB := indexB.KmerMatches(LCPB, K)
+	fmt.Println("maxKmerB", maxKmerB)
+	wB := wavelet.NewIntWavelet(kmersB, Bits(maxKmerB))
 
 	m := MatcherWT{
-		K:       K,
-		Forward: w,
+		K:        K,
+		Forward:  wF,
+		Backward: wB,
 	}
 	return m
+}
+
+// between S[xL:xR] and T[yL:yR]
+func (m MatcherWT) Match(W int, xL, xR, yL, yR int) (Matrix, Matrix) {
+	nx := CeilDiv(xR-xL, W)
+	ny := CeilDiv(yR-yL, W)
+	MF := NewMatrix(nx, ny)
+	MB := NewMatrix(nx, ny)
+	for i := 0; i < nx; i++ {
+		for j := 0; j < ny; j++ {
+			aL, aR := xL+i*W, xL+(i+1)*W
+			bL, bR := yL+j*W, yL+(j+1)*W
+			cx, cy := m.Forward.Intersect(aL, aR, bL, bR)
+			fmt.Println(i, j, cx, cy, aL, aR, bL, bR)
+			if cx > 0 && cy > 0 {
+				MF.Set(i, j, true)
+			}
+		}
+	}
+	return MF, MB
 }
