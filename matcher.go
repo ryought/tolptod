@@ -94,14 +94,14 @@ func NewMatcherWT(S []byte, T []byte, K int) MatcherWT {
 	LCPF := indexF.LCP()
 	kmersF, maxKmerF := indexF.KmerMatches(LCPF, K)
 	fmt.Println("maxKmerF", maxKmerF)
-	wF := wavelet.NewIntWavelet(kmersF, Bits(maxKmerF))
+	wF := wavelet.NewIntWavelet(kmersF)
 
 	// Backward: S$rev(T)
 	indexB := suffixarray.New(fasta.Join(S, fasta.RevComp(T)))
 	LCPB := indexB.LCP()
 	kmersB, maxKmerB := indexB.KmerMatches(LCPB, K)
 	fmt.Println("maxKmerB", maxKmerB)
-	wB := wavelet.NewIntWavelet(kmersB, Bits(maxKmerB))
+	wB := wavelet.NewIntWavelet(kmersB)
 
 	m := MatcherWT{
 		K:        K,
@@ -121,8 +121,8 @@ func (m MatcherWT) Match(W int, xL, xR, yL, yR int) (Matrix, Matrix) {
 		for j := 0; j < ny; j++ {
 			aL, aR := xL+i*W, xL+(i+1)*W
 			bL, bR := yL+j*W, yL+(j+1)*W
-			cx, cy := m.Forward.Intersect(aL, aR, bL, bR)
-			fmt.Println(i, j, cx, cy, aL, aR, bL, bR)
+			_, cx, cy := m.Forward.Intersect(aL, aR, bL, bR)
+			// fmt.Println(i, j, cx, cy, aL, aR, bL, bR)
 			if cx > 0 && cy > 0 {
 				MF.Set(i, j, true)
 			}

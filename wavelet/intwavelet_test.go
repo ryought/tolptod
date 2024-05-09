@@ -32,7 +32,7 @@ func TestBits(t *testing.T) {
 func TestIntWavelet(t *testing.T) {
 	//           0  1  2  3  4  5  6  7  8  9  10 11 12
 	x := []int64{0, 1, 1, 0, 2, 0, 2, 1, 4, 3, 5, 5, 9}
-	w := NewIntWavelet(x, 4)
+	w := NewIntWavelet(x)
 	for i := range x {
 		t.Logf("x[i=%d]\t%d", i, w.Access(i))
 	}
@@ -63,7 +63,7 @@ func TestIntWaveletBySize(t *testing.T) {
 	for _, n := range ns {
 		x := rand.RandomUint64(n, 2<<15)
 		t0 := time.Now()
-		w := NewIntWavelet(x, 15)
+		w := NewIntWavelet(x)
 		t.Logf("%d\t%d us", n, time.Since(t0).Microseconds())
 
 		t1 := time.Now()
@@ -79,7 +79,7 @@ func TestIntWaveletBySize(t *testing.T) {
 func BenchmarkIntWavelet(b *testing.B) {
 	n := 10_000_000
 	x := rand.RandomUint64(n, 10_000)
-	w := NewIntWavelet(x, 15)
+	w := NewIntWavelet(x)
 
 	// b.StartTimer()
 	b.ResetTimer()

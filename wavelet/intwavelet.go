@@ -37,7 +37,7 @@ func Bits(x int64) int {
 }
 
 // constructor
-func NewIntWavelet(s []int64, _D int) IntWavelet {
+func NewIntWavelet(s []int64) IntWavelet {
 	// max int
 	S := slices.Max(s)
 	D := Bits(S) + 1
