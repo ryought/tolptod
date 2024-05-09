@@ -6,15 +6,44 @@ import (
 	"time"
 )
 
+func TestBits(t *testing.T) {
+	tests := []struct {
+		x    int64
+		bits int
+	}{
+		{0b000, 0},
+		{0b001, 1},
+		{0b010, 2},
+		{0b011, 2},
+		{0b011, 2},
+		{0b100, 3},
+		{0b101, 3},
+		{0b110, 3},
+		{0b111, 3},
+	}
+	for _, test := range tests {
+		t.Log(test.x, Bits(test.x), test.bits)
+		if Bits(test.x) != test.bits {
+			t.Error()
+		}
+	}
+}
+
 func TestIntWavelet(t *testing.T) {
 	//           0  1  2  3  4  5  6  7  8  9  10 11 12
 	x := []int64{0, 1, 1, 0, 2, 0, 2, 1, 4, 3, 5, 5, 9}
 	w := NewIntWavelet(x, 4)
 	for i := range x {
-		t.Log(i, w.Access(i))
+		t.Logf("x[i=%d]\t%d", i, w.Access(i))
 	}
+	t.Log(w.Rank(5, 0))
 	t.Log(w.Rank(5, 1))
+	t.Log(w.Rank(5, 2))
+	t.Log(w.Rank(5, 3))
 	t.Log(w.Intersect(0, 4, 9, 13))
+	t.Log(w.Intersect(0, 4, 4, 8))
+	t.Log(w.Intersect(0, 4, 4, 7))
+	t.Log(w.Intersect(3, 5, 5, 7))
 }
 
 func TestIntWaveletBySize(t *testing.T) {

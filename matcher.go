@@ -41,20 +41,6 @@ func CeilDiv(x int, y int) int {
 	return 1 + (x-1)/y
 }
 
-// ceil(log2(x))
-func Bits(x int64) int {
-	var y int64
-	i := 0
-	for i < 64 {
-		if x <= y {
-			break
-		}
-		y = (y << 1) + 1
-		i += 1
-	}
-	return i
-}
-
 // between S[xL:xR] and T[yL:yR]
 func (m MatcherSA) Match(W int, xL, xR, yL, yR int, K int, freqLow int, freqUp int) (Matrix, Matrix) {
 	X := len(m.S)

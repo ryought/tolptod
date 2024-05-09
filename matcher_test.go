@@ -5,29 +5,6 @@ import (
 	"testing"
 )
 
-func TestBits(t *testing.T) {
-	tests := []struct {
-		x    int64
-		bits int
-	}{
-		{0b000, 0},
-		{0b001, 1},
-		{0b010, 2},
-		{0b011, 2},
-		{0b011, 2},
-		{0b100, 3},
-		{0b101, 3},
-		{0b110, 3},
-		{0b111, 3},
-	}
-	for _, test := range tests {
-		t.Log(test.x, Bits(test.x), test.bits)
-		if Bits(test.x) != test.bits {
-			t.Error()
-		}
-	}
-}
-
 func TestMatcherSA(t *testing.T) {
 	S := []byte("ATGGATCGG")
 	N := len(S)

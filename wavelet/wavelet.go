@@ -346,7 +346,7 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 
 	q := NewStack()
 	d := 0
-	var c byte
+	var c int64
 	q.StackPush(Intersection{aL, aR, bL, bR, d, c})
 
 	W := w.W()
@@ -358,7 +358,7 @@ func (w Wavelet) Intersect(aL, aR, bL, bR int, K int) (int, int) {
 		k := is.d / W
 		if i == 0 && k > 0 {
 			// fmt.Printf("current char %c\n", c)
-			if w.IsTerminal(is.c) {
+			if w.IsTerminal(byte(is.c)) {
 				// break this intersection
 				continue
 			} else {

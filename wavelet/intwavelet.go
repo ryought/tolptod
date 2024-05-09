@@ -3,6 +3,7 @@ package wavelet
 import (
 	// "fmt"
 	"github.com/ryought/tolptod/wavelet/bitvec"
+	"slices"
 	// "time"
 )
 
@@ -21,11 +22,29 @@ func (w IntWavelet) N() int {
 	return w.bits[0].Size()
 }
 
-// constructor
-func NewIntWavelet(s []int64, D int) IntWavelet {
-	if D < 1 || D > 64 {
-		panic("W should be 1<=D<=64.")
+// ceil(log2(x))
+func Bits(x int64) int {
+	var y int64
+	i := 0
+	for i < 64 {
+		if x <= y {
+			break
+		}
+		y = (y << 1) + 1
+		i += 1
 	}
+	return i
+}
+
+// constructor
+func NewIntWavelet(s []int64, _D int) IntWavelet {
+	// max int
+	S := slices.Max(s)
+	D := Bits(S) + 1
+	if slices.Min(s) < 0 {
+		panic("negative int is not supported")
+	}
+
 	bits := make([]bitvec.BitVecV2, D)
 	offsets := make([]int, D)
 
@@ -37,9 +56,21 @@ func NewIntWavelet(s []int64, D int) IntWavelet {
 	}
 
 	for d := 0; d < D; d++ {
-		b := bitvec.Build(len(s), func(o int) byte {
-			return byte(s[x[o]] >> d & 1)
-		})
+		var f func(int) byte
+		if d == 0 {
+			f = func(o int) byte {
+				if s[x[o]] > 0 {
+					return 1
+				} else {
+					return 0
+				}
+			}
+		} else {
+			f = func(o int) byte {
+				return byte(s[x[o]] >> (d - 1) & 1)
+			}
+		}
+		b := bitvec.Build(len(s), f)
 		offset := b.Rank(len(s))
 		// fmt.Printf("bitvec in %d ms\n", time.Since(t0).Milliseconds())
 		// fmt.Println(x, "X")
@@ -80,7 +111,13 @@ func (w IntWavelet) Access(i int) int64 {
 	o := i
 	for d := 0; d < w.D(); d++ {
 		b := w.bits[d].Get(o)
-		r |= int64(b << d)
+		if d == 0 {
+			if b == 0 {
+				return 0
+			}
+		} else {
+			r |= int64(b << (d - 1))
+		}
 		if b == 1 {
 			o = w.offsets[d] + o - w.bits[d].Rank(o)
 		} else {
@@ -90,7 +127,7 @@ func (w IntWavelet) Access(i int) int64 {
 	return r
 }
 
-// Get the occurrence of query in s[0:i) for 0<=i<=n.
+// Get the occurrence of x in s[0:i) for 0<=i<=n.
 func (w IntWavelet) Rank(i int, x int64) int {
 	if i < 0 || i > w.N() {
 		panic("i should be 0<=i<=N")
@@ -101,7 +138,19 @@ func (w IntWavelet) Rank(i int, x int64) int {
 	oL, oR := 0, i
 
 	for d := 0; d < w.D(); d++ {
-		b := x >> d & 1
+		// x to b
+		var b int64
+		if d == 0 {
+			if x > 0 {
+				b = 1
+			} else {
+				b = 0
+			}
+		} else {
+			b = x >> (d - 1) & 1
+		}
+
+		// descend wavelet tree to left/right according to b
 		if oL == oR {
 			return 0
 		}
@@ -118,7 +167,7 @@ func (w IntWavelet) Rank(i int, x int64) int {
 }
 
 // Find common int in S[aL:aR) and S[bL:bR).
-func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int, int) {
+func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int64, int, int) {
 	if aL < 0 || aR > w.N() || aL > aR {
 		panic("invalid search interval [aL:aR)")
 	}
@@ -128,7 +177,7 @@ func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int, int) {
 
 	q := NewStack()
 	d := 0
-	var c byte
+	var c int64
 	q.StackPush(Intersection{aL, aR, bL, bR, d, c})
 
 	D := w.D()
@@ -138,43 +187,58 @@ func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int, int) {
 
 		if is.d == D {
 			// fmt.Println("found!")
-			return is.aR - is.aL, is.bR - is.bL
+			return is.c, is.aR - is.aL, is.bR - is.bL
 		}
 
-		// to left
-		isL := Intersection{
-			aL: w.bits[is.d].Rank(is.aL),
-			aR: w.bits[is.d].Rank(is.aR),
-			bL: w.bits[is.d].Rank(is.bL),
-			bR: w.bits[is.d].Rank(is.bR),
-			d:  is.d + 1,
-			c:  is.c | (0 << is.d),
-		}
-
-		// to right
-		isR := Intersection{
-			aL: w.offsets[is.d] + is.aL - w.bits[is.d].Rank(is.aL),
-			aR: w.offsets[is.d] + is.aR - w.bits[is.d].Rank(is.aR),
-			bL: w.offsets[is.d] + is.bL - w.bits[is.d].Rank(is.bL),
-			bR: w.offsets[is.d] + is.bR - w.bits[is.d].Rank(is.bR),
-			d:  is.d + 1,
-			c:  is.c | (1 << is.d),
-		}
-
-		if isL.IsOpen() && isR.IsOpen() {
-			if isL.Priority() > isR.Priority() {
-				q.StackPush(isR)
-				q.StackPush(isL)
-			} else {
-				q.StackPush(isL)
+		if is.d == 0 {
+			// right only
+			isR := Intersection{
+				aL: w.offsets[is.d] + is.aL - w.bits[is.d].Rank(is.aL),
+				aR: w.offsets[is.d] + is.aR - w.bits[is.d].Rank(is.aR),
+				bL: w.offsets[is.d] + is.bL - w.bits[is.d].Rank(is.bL),
+				bR: w.offsets[is.d] + is.bR - w.bits[is.d].Rank(is.bR),
+				d:  is.d + 1,
+				c:  is.c,
+			}
+			if isR.IsOpen() {
 				q.StackPush(isR)
 			}
-		} else if isL.IsOpen() {
-			q.StackPush(isL)
-		} else if isR.IsOpen() {
-			q.StackPush(isR)
+		} else {
+			// to left
+			isL := Intersection{
+				aL: w.bits[is.d].Rank(is.aL),
+				aR: w.bits[is.d].Rank(is.aR),
+				bL: w.bits[is.d].Rank(is.bL),
+				bR: w.bits[is.d].Rank(is.bR),
+				d:  is.d + 1,
+				c:  is.c | (0 << (is.d - 1)),
+			}
+
+			// to right
+			isR := Intersection{
+				aL: w.offsets[is.d] + is.aL - w.bits[is.d].Rank(is.aL),
+				aR: w.offsets[is.d] + is.aR - w.bits[is.d].Rank(is.aR),
+				bL: w.offsets[is.d] + is.bL - w.bits[is.d].Rank(is.bL),
+				bR: w.offsets[is.d] + is.bR - w.bits[is.d].Rank(is.bR),
+				d:  is.d + 1,
+				c:  is.c | (1 << (is.d - 1)),
+			}
+
+			if isL.IsOpen() && isR.IsOpen() {
+				if isL.Priority() > isR.Priority() {
+					q.StackPush(isR)
+					q.StackPush(isL)
+				} else {
+					q.StackPush(isL)
+					q.StackPush(isR)
+				}
+			} else if isL.IsOpen() {
+				q.StackPush(isL)
+			} else if isR.IsOpen() {
+				q.StackPush(isR)
+			}
 		}
 	}
 
-	return 0, 0
+	return 0, 0, 0
 }

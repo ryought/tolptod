@@ -9,8 +9,8 @@ type Intersection struct {
 	aR int
 	bL int
 	bR int
-	d  int  // Current depth
-	c  byte // Last character of k-mer
+	d  int   // Current depth
+	c  int64 // Last character of k-mer
 }
 
 func (is Intersection) Priority() int {
