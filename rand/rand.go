@@ -2,9 +2,13 @@ package rand
 
 import "math/rand"
 
-func RandomDNA(n int) (ret []byte) {
+func RandomDNA(n int) []byte {
+	return RandomDNAWithSeed(n, 0)
+}
+
+func RandomDNAWithSeed(n int, seed int64) (ret []byte) {
 	DNA := []byte{'A', 'C', 'G', 'T'}
-	r := rand.New(rand.NewSource(0))
+	r := rand.New(rand.NewSource(seed))
 	ret = make([]byte, n)
 	for i := range ret {
 		ret[i] = DNA[r.Intn(4)]

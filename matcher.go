@@ -5,6 +5,7 @@ import (
 	"github.com/ryought/tolptod/fasta"
 	"github.com/ryought/tolptod/suffixarray"
 	"github.com/ryought/tolptod/wavelet"
+	"time"
 )
 
 type MatcherConfig struct {
@@ -67,7 +68,7 @@ func (m MatcherSA) Match(W int, xL, xR, yL, yR int, K int, freqLow int, freqUp i
 		_, xF := m.SAForward.LookupWithin(kmer, xL, xR, freqUp+1)
 		_, xB := m.SABackward.LookupWithin(kmer, X-xR-K, X-xL-K, freqUp+1)
 		n := len(xF) + len(xB)
-		fmt.Println(y, string(kmer), "F", xF, "B", xB)
+		// fmt.Println(y, string(kmer), "F", xF, "B", xB)
 		if freqLow <= n && n <= freqUp {
 			// forward
 			for _, x := range xF {
@@ -117,16 +118,23 @@ func (m MatcherWT) Match(W int, xL, xR, yL, yR int) (Matrix, Matrix) {
 	ny := CeilDiv(yR-yL, W)
 	MF := NewMatrix(nx, ny)
 	MB := NewMatrix(nx, ny)
+	fmt.Printf("matrix %d %d\n", nx, ny)
+	var duration int64
 	for i := 0; i < nx; i++ {
 		for j := 0; j < ny; j++ {
 			aL, aR := xL+i*W, min(xL+(i+1)*W, xR)
 			bL, bR := yL+j*W, min(yL+(j+1)*W, yR)
+
+			start := time.Now()
 			_, cx, cy := m.Forward.Intersect(aL, aR, bL, bR)
+			duration += time.Since(start).Nanoseconds()
+
 			// fmt.Println(i, j, cx, cy, aL, aR, bL, bR)
 			if cx > 0 && cy > 0 {
 				MF.Set(i, j, true)
 			}
 		}
 	}
+	fmt.Printf("average query time %d ns for W=%d\n", duration/int64(nx*ny), W)
 	return MF, MB
 }
