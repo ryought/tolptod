@@ -43,6 +43,15 @@ func CreateTestWavelet(t *testing.T, x []int64) {
 	N := len(x)
 	w := NewIntWavelet(x)
 
+	// access
+	for i := 0; i < N; i++ {
+		got := w.Access(i)
+		expected := x[i]
+		if got != expected {
+			t.Error("notcorrect", i)
+		}
+	}
+
 	// rank
 	for i := 0; i <= N; i++ {
 		for a := 0; a < 10; a++ {
@@ -86,6 +95,15 @@ func TestIntWavelet(t *testing.T) {
 	w := NewIntWavelet(x)
 	for i := range x {
 		t.Logf("x[i=%d]\t%d", i, w.Access(i))
+	}
+
+	for i := 0; i < N; i++ {
+		got := w.Access(i)
+		expected := x[i]
+		t.Logf("Access(i=%d)=%d %d", i, got, expected)
+		if got != expected {
+			t.Error("notcorrect", i)
+		}
 	}
 
 	for i := 0; i <= N; i++ {
