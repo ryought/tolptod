@@ -119,8 +119,8 @@ func (m MatcherWT) Match(W int, xL, xR, yL, yR int) (Matrix, Matrix) {
 	MB := NewMatrix(nx, ny)
 	for i := 0; i < nx; i++ {
 		for j := 0; j < ny; j++ {
-			aL, aR := xL+i*W, xL+(i+1)*W
-			bL, bR := yL+j*W, yL+(j+1)*W
+			aL, aR := xL+i*W, min(xL+(i+1)*W, xR)
+			bL, bR := yL+j*W, min(yL+(j+1)*W, yR)
 			_, cx, cy := m.Forward.Intersect(aL, aR, bL, bR)
 			// fmt.Println(i, j, cx, cy, aL, aR, bL, bR)
 			if cx > 0 && cy > 0 {

@@ -57,7 +57,7 @@ func TestMatcherWT(t *testing.T) {
 	m := NewMatcherWT(S, S, K)
 
 	// W=1
-	F, B := m.Match(2, 0, N, 0, N)
+	F, B := m.Match(1, 0, N, 0, N)
 	t.Logf("S =%s", S)
 	t.Logf("S'=%s", fasta.RevComp(S))
 	t.Log("F")
