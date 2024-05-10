@@ -29,14 +29,94 @@ func TestBits(t *testing.T) {
 	}
 }
 
+func NaiveOccurrence(s []int64, x int64) int {
+	count := 0
+	for _, v := range s {
+		if v == x {
+			count += 1
+		}
+	}
+	return count
+}
+
+func CreateTestWavelet(t *testing.T, x []int64) {
+	N := len(x)
+	w := NewIntWavelet(x)
+
+	// rank
+	for i := 0; i <= N; i++ {
+		for a := 0; a < 10; a++ {
+			got := w.Rank(i, int64(a))
+			expected := NaiveOccurrence(x[:i], int64(a))
+			if got != expected {
+				t.Error("notcorrect", i, a)
+			}
+		}
+	}
+
+	// intersect
+	for aL := 0; aL <= N; aL++ {
+		for aR := aL; aR <= N; aR++ {
+			for bL := 0; bL <= N; bL++ {
+				for bR := bL; bR <= N; bR++ {
+					c, a, b := w.Intersect(aL, aR, bL, bR)
+					ea := NaiveOccurrence(x[aL:aR], c)
+					eb := NaiveOccurrence(x[bL:bR], c)
+					if c > 0 {
+						if ea != a || eb != b {
+							t.Error("incorrect", aL, aR, bL, bR)
+						}
+					}
+				}
+			}
+		}
+	}
+
+}
+
+func TestIntWaveletRandom(t *testing.T) {
+	x := rand.RandomUint64(50, 10)
+	CreateTestWavelet(t, x)
+}
+
 func TestIntWavelet(t *testing.T) {
 	//           0  1  2  3  4  5  6  7  8  9  10 11 12
 	x := []int64{0, 1, 1, 0, 2, 0, 2, 1, 4, 3, 5, 5, 9}
+	N := len(x)
 	w := NewIntWavelet(x)
 	for i := range x {
 		t.Logf("x[i=%d]\t%d", i, w.Access(i))
 	}
-	t.Log(w.Rank(5, 0))
+
+	for i := 0; i <= N; i++ {
+		for a := 0; a < 10; a++ {
+			got := w.Rank(i, int64(a))
+			expected := NaiveOccurrence(x[:i], int64(a))
+			t.Logf("Rank(i=%d,x=%d)=%d %d", i, a, got, expected)
+			if got != expected {
+				t.Error("notcorrect", i, a)
+			}
+		}
+	}
+
+	for aL := 0; aL <= N; aL++ {
+		for aR := aL; aR <= N; aR++ {
+			for bL := 0; bL <= N; bL++ {
+				for bR := bL; bR <= N; bR++ {
+					c, a, b := w.Intersect(aL, aR, bL, bR)
+					ea := NaiveOccurrence(x[aL:aR], c)
+					eb := NaiveOccurrence(x[bL:bR], c)
+					t.Logf("Intersect(%d,%d,%d,%d)\t%d\t(%d %d)\t(%d %d)", aL, aR, bL, bR, c, a, b, ea, eb)
+					if c > 0 {
+						if ea != a || eb != b {
+							t.Error("incorrect", aL, aR, bL, bR)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	t.Log(w.Rank(5, 1))
 	t.Log(w.Rank(5, 2))
 	t.Log(w.Rank(5, 3))
