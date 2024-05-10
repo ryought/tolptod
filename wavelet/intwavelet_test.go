@@ -2,6 +2,7 @@ package wavelet
 
 import (
 	"github.com/ryought/tolptod/rand"
+	mathrand "math/rand"
 	"testing"
 	"time"
 )
@@ -172,6 +173,32 @@ func TestIntWaveletBySize(t *testing.T) {
 		t.Logf("%d\t%d us", n, time.Since(t1).Microseconds()/int64(N))
 		// t.Log(n)
 	}
+}
+
+func TestIntWaveletPerformanceCheck(t *testing.T) {
+	sigma := int64(10_000) // alphabet size
+	n := 1_000_000         // 1MB
+	x := rand.RandomUint64(n, sigma)
+	w := NewIntWavelet(x)
+	bands := []int{1, 10, 100, 1_000, 10_000, 100_000}
+	r := mathrand.New(mathrand.NewSource(0))
+	for _, band := range bands {
+		var duration int64
+		N := 1000
+		count := 0
+		for trial := 0; trial < N; trial++ {
+			i := r.Intn(n - band)
+			j := r.Intn(n - band)
+
+			start := time.Now()
+			_, ca, cb := w.Intersect(i, i+band, j, j+band)
+			duration += time.Since(start).Nanoseconds()
+			count += ca
+			count += cb
+		}
+		t.Logf("%10d\t%d\t%d", band, duration/int64(N), count)
+	}
+	t.Logf("band size\ttime ns\tn matches")
 }
 
 func BenchmarkIntWavelet(b *testing.B) {
