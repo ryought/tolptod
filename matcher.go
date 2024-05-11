@@ -127,9 +127,11 @@ func (m MatcherWT) Match(W int, xL, xR, yL, yR int) (Matrix, Matrix) {
 
 			start := time.Now()
 			_, cx, cy := m.Forward.Intersect(aL, aR, bL, bR)
-			duration += time.Since(start).Nanoseconds()
+			t := time.Since(start).Nanoseconds()
+			duration += t
 
-			// fmt.Println(i, j, cx, cy, aL, aR, bL, bR)
+			fmt.Println(i, j, t)
+
 			if cx > 0 && cy > 0 {
 				MF.Set(i, j, true)
 			}

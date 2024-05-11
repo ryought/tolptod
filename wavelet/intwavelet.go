@@ -2,8 +2,10 @@ package wavelet
 
 import (
 	// "fmt"
-	"github.com/ryought/tolptod/wavelet/bitvec"
+	"fmt"
 	"slices"
+
+	"github.com/ryought/tolptod/wavelet/bitvec"
 	// "time"
 )
 
@@ -179,14 +181,17 @@ func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int64, int, int) {
 	d := 0
 	var c int64
 	q.StackPush(Intersection{aL, aR, bL, bR, d, c})
+	n := 0
 
 	D := w.D()
 	for q.Len() > 0 {
 		is := q.StackPop()
+		n += 1
 		// fmt.Printf("poped [%d,%d) [%d,%d) d=%d\n", is.aL, is.aR, is.bL, is.bR, is.d)
 
 		if is.d == D {
 			// fmt.Println("found!")
+			fmt.Println("Intersect(0)", n)
 			return is.c, is.aR - is.aL, is.bR - is.bL
 		}
 
@@ -240,5 +245,6 @@ func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int64, int, int) {
 		}
 	}
 
+	fmt.Println("Intersect(1)", n)
 	return 0, 0, 0
 }
