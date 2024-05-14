@@ -192,9 +192,11 @@ func TestIntWaveletPerformanceCheck(t *testing.T) {
 
 			start := time.Now()
 			_, ca, cb := w.Intersect(i, i+band, j, j+band)
-			duration += time.Since(start).Nanoseconds()
+			queryTime := time.Since(start).Nanoseconds()
+			duration += queryTime
 			count += ca
 			count += cb
+			t.Logf("%d\t%d\t%d\t%d", band, ca, cb, queryTime)
 		}
 		t.Logf("%10d\t%d\t%d", band, duration/int64(N), count)
 	}

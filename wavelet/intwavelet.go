@@ -2,7 +2,6 @@ package wavelet
 
 import (
 	// "fmt"
-	"fmt"
 	"slices"
 
 	"github.com/ryought/tolptod/wavelet/bitvec"
@@ -191,7 +190,7 @@ func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int64, int, int) {
 
 		if is.d == D {
 			// fmt.Println("found!")
-			fmt.Println("Intersect(0)", n)
+			// fmt.Println("Intersect(0)", n)
 			return is.c, is.aR - is.aL, is.bR - is.bL
 		}
 
@@ -245,6 +244,6 @@ func (w IntWavelet) Intersect(aL, aR, bL, bR int) (int64, int, int) {
 		}
 	}
 
-	fmt.Println("Intersect(1)", n)
+	// fmt.Println("Intersect(1)", n)
 	return 0, 0, 0
 }
