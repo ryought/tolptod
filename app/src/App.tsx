@@ -119,19 +119,20 @@ function App() {
       0,
       queryLen
     )
+    const s = useCache
+      ? Math.max(1, Math.floor(scale / cacheScale)) * cacheScale
+      : scale
     const request: Request = {
       x: targetIndex,
       y: queryIndex,
-      xA: useCache ? floorMultiple(xA, cacheScale) : xA,
-      xB: useCache ? floorMultiple(xB, cacheScale) : xB,
-      yA: useCache ? floorMultiple(yA, cacheScale) : yA,
-      yB: useCache ? floorMultiple(yB, cacheScale) : yB,
+      xA: useCache ? floorMultiple(xA, s) : xA,
+      xB: useCache ? floorMultiple(xB, s) : xB,
+      yA: useCache ? floorMultiple(yA, s) : yA,
+      yB: useCache ? floorMultiple(yB, s) : yB,
       k,
+      scale: s,
       freqLow,
       freqUp,
-      scale: useCache
-        ? Math.max(1, Math.floor(scale / cacheScale)) * cacheScale
-        : scale,
       useCache,
     }
     data.append('json', JSON.stringify(request))

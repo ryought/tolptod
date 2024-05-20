@@ -84,19 +84,7 @@ func ComputeMatrix(xindex, yindex Index, config Config) (Matrix, Matrix) {
 		xB := xindex.Backward.LookupAll(kmer)
 
 		// count for match in the region
-		n := 0
-		for i := 0; i < xF.Len(); i++ {
-			x := xF.Get(i)
-			if config.xL <= x && x < config.xR {
-				n += 1
-			}
-		}
-		for i := 0; i < xB.Len(); i++ {
-			x := X - xB.Get(i) - K
-			if config.xL <= x && x < config.xR {
-				n += 1
-			}
-		}
+		n := xF.Len() + xB.Len()
 
 		// fill the table
 		if config.freqLow <= n && (config.freqUp == -1 || n <= config.freqUp) {
