@@ -33,12 +33,6 @@ func toInfo(xrs []fasta.Record, yrs []fasta.Record) Info {
 	}
 }
 
-type Index struct {
-	N        int
-	Forward  suffixarray.Index
-	Backward suffixarray.Index
-}
-
 func BuildIndexes(records []fasta.Record) []Index {
 	indexes := make([]Index, len(records))
 	for i, record := range records {

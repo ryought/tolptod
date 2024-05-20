@@ -32,16 +32,6 @@ func NewMatcherSA(S []byte, T []byte) MatcherSA {
 	return m
 }
 
-// ceil(float(x)/float(y))
-func CeilDiv(x int, y int) int {
-	// if x > 0 {
-	// 	return 1 + (x-1)/y
-	// } else {
-	// 	return x / y
-	// }
-	return 1 + (x-1)/y
-}
-
 // between S[xL:xR] and T[yL:yR]
 func (m MatcherSA) Match(W int, xL, xR, yL, yR int, K int, freqLow int, freqUp int) (Matrix, Matrix) {
 	X := len(m.S)
