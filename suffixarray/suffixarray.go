@@ -48,6 +48,14 @@ func (a *ints) len() int {
 	return len(a.int32) + len(a.int64)
 }
 
+func (a *ints) Len() int {
+	return a.len()
+}
+
+func (a *ints) Get(i int) int {
+	return int(a.get(i))
+}
+
 func (a *ints) get(i int) int64 {
 	if a.int32 != nil {
 		return int64(a.int32[i])

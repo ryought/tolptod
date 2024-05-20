@@ -65,18 +65,37 @@ func ComputeMatrix(xindex, yindex Index, config Config) (Matrix, Matrix) {
 
 	for y := config.yL; y < min(config.yR, Y-K+1); y++ {
 		kmer := yindex.Forward.Bytes()[y : y+K]
-		_, xF := xindex.Forward.LookupWithin(kmer, config.xL, config.xR, config.freqUp+1)
-		_, xB := xindex.Backward.LookupWithin(kmer, X-config.xR-K, X-config.xL-K, config.freqUp+1)
-		n := len(xF) + len(xB)
-		if config.freqLow <= n && n <= config.freqUp {
-			// fill the cells
-			// forward
-			for _, x := range xF {
-				matF.Set((x-config.xL)/W, (y-config.yL)/W, true)
+		xF := xindex.Forward.LookupAll(kmer)
+		xB := xindex.Backward.LookupAll(kmer)
+
+		// count for match in the region
+		n := 0
+		for i := 0; i < xF.Len(); i++ {
+			x := xF.Get(i)
+			if config.xL <= x && x < config.xR {
+				n += 1
 			}
-			// backward
-			for _, x := range xB {
-				matB.Set((X-x-K-config.xL)/W, (y-config.yL)/W, true)
+		}
+		for i := 0; i < xB.Len(); i++ {
+			x := X - xB.Get(i) - K
+			if config.xL <= x && x < config.xR {
+				n += 1
+			}
+		}
+
+		// fill the table
+		if config.freqLow <= n && (config.freqUp == -1 || n <= config.freqUp) {
+			for i := 0; i < xF.Len(); i++ {
+				x := xF.Get(i)
+				if config.xL <= x && x < config.xR {
+					matF.Set((x-config.xL)/W, (y-config.yL)/W, true)
+				}
+			}
+			for i := 0; i < xB.Len(); i++ {
+				x := X - xB.Get(i) - K
+				if config.xL <= x && x < config.xR {
+					matB.Set((x-config.xL)/W, (y-config.yL)/W, true)
+				}
 			}
 		}
 	}
