@@ -47,7 +47,7 @@ type Request struct {
 	UseCache bool `json:"useCache"`
 }
 
-func createGenerateHandler(index IndexV2) http.HandlerFunc {
+func createGenerateHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body := r.FormValue("json")
 		var req Request
@@ -55,8 +55,8 @@ func createGenerateHandler(index IndexV2) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
-		log.Println("/generate requested", req, req.K)
-		forward, backward := ComputeMatrix(index.xindex[req.X], index.yindex[req.Y], Config{
+		var forward, backward Matrix
+		config := Config{
 			k:       req.K,
 			bin:     req.Scale,
 			freqLow: req.FreqLow,
@@ -65,8 +65,16 @@ func createGenerateHandler(index IndexV2) http.HandlerFunc {
 			xR:      req.XB,
 			yL:      req.YA,
 			yR:      req.YB,
-		})
-		log.Println("matching done")
+		}
+		if req.UseCache {
+			log.Println("/generate requested with cache", req, req.K)
+			forward, backward = cache.ComputeMatrix(config)
+			log.Println("matching done")
+		} else {
+			log.Println("/generate requested", req, req.K)
+			forward, backward = ComputeMatrix(index.xindex[req.X], index.yindex[req.Y], config)
+			log.Println("matching done")
+		}
 		plot := Plot{http.StatusOK, "ok", forward.Drain(), backward.Drain()}
 
 		res, err := json.Marshal(plot)
@@ -80,7 +88,7 @@ func createGenerateHandler(index IndexV2) http.HandlerFunc {
 	}
 }
 
-func createCacheHandler(index IndexV2) http.HandlerFunc {
+func createCacheHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body := r.FormValue("json")
 		var req Request
@@ -89,7 +97,7 @@ func createCacheHandler(index IndexV2) http.HandlerFunc {
 		}
 
 		log.Println("/cache requested", req.X, req.Y, req.K, req.Scale)
-		NewCache(
+		*cache = NewCache(
 			index.xindex[req.X],
 			index.yindex[req.Y],
 			Config{
@@ -170,11 +178,12 @@ func main() {
 	indexes := NewIndexV2FromRecords(xrs, yrs)
 	log.Println("Done")
 	info := toInfo(xrs, yrs)
+	var cache Cache
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/info/", createInfoHandler(info))
-	http.HandleFunc("/cache/", createCacheHandler(indexes))
-	http.HandleFunc("/generate/", createGenerateHandler(indexes))
+	http.HandleFunc("/cache/", createCacheHandler(indexes, &cache))
+	http.HandleFunc("/generate/", createGenerateHandler(indexes, &cache))
 
 	log.Printf("Server running on %s...", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))

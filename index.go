@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/ryought/tolptod/fasta"
 	"github.com/ryought/tolptod/suffixarray"
 )
@@ -76,6 +78,7 @@ func ComputeMatrix(xindex, yindex Index, config Config) (Matrix, Matrix) {
 	matB := NewMatrix(nx, ny)
 
 	for y := config.yL; y < min(config.yR, Y-K+1); y++ {
+		fmt.Println("y", y)
 		kmer := yindex.Forward.Bytes()[y : y+K]
 		xF := xindex.Forward.LookupAll(kmer)
 		xB := xindex.Backward.LookupAll(kmer)
@@ -154,8 +157,8 @@ func (c Cache) ComputeMatrix(config Config) (Matrix, Matrix) {
 	xR0 := config.xR / W0
 	yL0 := config.yL / W0
 	yR0 := config.yR / W0
-	for x := xL0; x < xR0; x++ {
-		for y := yL0; y < yR0; y++ {
+	for y := yL0; y < yR0; y++ {
+		for x := xL0; x < xR0; x++ {
 			if c.matF.Get(x, y) == true {
 				matF.Set((x-xL0)/R, (y-yL0)/R, true)
 			}

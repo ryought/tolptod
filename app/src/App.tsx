@@ -25,6 +25,8 @@ export interface Request {
   freqUp: number
   // bp per px
   scale: number
+  // cache
+  useCache: boolean
 }
 
 export type Plot = {
@@ -36,6 +38,10 @@ export type Plot = {
   height: number
   active: boolean
   el: JSX.Element
+}
+
+export const floorMultiple = (x: number, m: number) => {
+  return Math.floor(x / m) * m
 }
 
 function App() {
@@ -62,7 +68,7 @@ function App() {
   // k-mer related
   const [k, setK] = useState(16)
   const [freqLow, setFreqLow] = useState(1)
-  const [freqUp, setFreqUp] = useState(50)
+  const [freqUp, setFreqUp] = useState(-1)
 
   // touchpad related
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -78,43 +84,56 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState<string>('#808080')
   const count = useRef<number>(0)
   const [live, setLive] = useState<boolean>(true)
+  const [useCache, setUseCache] = useState<boolean>(false)
   const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
   const [plots, setPlots] = useState<Plot[]>([])
   const scale = Math.ceil(region.scale)
-  const xA = clamp(
-    Math.round(region.center.x - (width * region.scale) / 2),
-    0,
-    targetLen
-  )
-  const xB = clamp(
-    Math.round(region.center.x + (width * region.scale) / 2),
-    0,
-    targetLen
-  )
-  const yA = clamp(
-    Math.round(region.center.y - (height * region.scale) / 2),
-    0,
-    queryLen
-  )
-  const yB = clamp(
-    Math.round(region.center.y + (height * region.scale) / 2),
-    0,
-    queryLen
-  )
-  const request: Request = {
-    x: targetIndex,
-    y: queryIndex,
-    xA,
-    xB,
-    yA,
-    yB,
-    k,
-    freqLow,
-    freqUp,
-    scale,
-  }
+  const [cacheScale, setCacheScale] = useState<number>(1)
+  useEffect(() => {
+    setCacheScale(
+      Math.max(
+        Math.pow(2, Math.floor(Math.log2(queryLen || 1) / 2)),
+        Math.pow(2, Math.floor(Math.log2(targetLen || 1) / 2))
+      )
+    )
+  }, [querys, targets, queryIndex, targetIndex])
   const requestPlot = () => {
     const data = new FormData()
+    const xA = clamp(
+      Math.round(region.center.x - (width * region.scale) / 2),
+      0,
+      targetLen
+    )
+    const xB = clamp(
+      Math.round(region.center.x + (width * region.scale) / 2),
+      0,
+      targetLen
+    )
+    const yA = clamp(
+      Math.round(region.center.y - (height * region.scale) / 2),
+      0,
+      queryLen
+    )
+    const yB = clamp(
+      Math.round(region.center.y + (height * region.scale) / 2),
+      0,
+      queryLen
+    )
+    const request: Request = {
+      x: targetIndex,
+      y: queryIndex,
+      xA: useCache ? floorMultiple(xA, cacheScale) : xA,
+      xB: useCache ? floorMultiple(xB, cacheScale) : xB,
+      yA: useCache ? floorMultiple(yA, cacheScale) : yA,
+      yB: useCache ? floorMultiple(yB, cacheScale) : yB,
+      k,
+      freqLow,
+      freqUp,
+      scale: useCache
+        ? Math.max(1, Math.floor(scale / cacheScale)) * cacheScale
+        : scale,
+      useCache,
+    }
     data.append('json', JSON.stringify(request))
     console.log('send', request)
     fetch(isDev ? 'http://localhost:8080/generate/' : 'generate/', {
@@ -182,6 +201,19 @@ function App() {
 
   const onUpdateCache = () => {
     const data = new FormData()
+    const request: Request = {
+      x: targetIndex,
+      y: queryIndex,
+      xA: 0,
+      xB: targetLen,
+      yA: 0,
+      yB: queryLen,
+      k,
+      freqLow,
+      freqUp,
+      scale: cacheScale,
+      useCache,
+    }
     data.append('json', JSON.stringify(request))
     fetch(isDev ? 'http://localhost:8080/cache/' : 'cache/', {
       method: 'POST',
@@ -230,6 +262,10 @@ function App() {
         plots={plots}
         onChangePlots={setPlots}
         onUpdateCache={onUpdateCache}
+        useCache={useCache}
+        onChangeUseCache={setUseCache}
+        cacheScale={cacheScale}
+        onChangeCacheScale={setCacheScale}
       />
       <Dotplots
         region={region}

@@ -32,6 +32,10 @@ type Props = {
   onChangeTargetIndex: (index: number) => void
   onChangeQueryIndex: (index: number) => void
   // cache
+  cacheScale: number
+  onChangeCacheScale: (scale: number) => void
+  useCache: boolean
+  onChangeUseCache: (useCache: boolean) => void
   onUpdateCache: () => void
 }
 
@@ -62,6 +66,10 @@ export const Config: React.FC<Props> = ({
   queryIndex,
   onChangeTargetIndex,
   onChangeQueryIndex,
+  useCache,
+  cacheScale,
+  onChangeCacheScale,
+  onChangeUseCache,
   onUpdateCache,
 }) => {
   const style = {
@@ -101,6 +109,8 @@ export const Config: React.FC<Props> = ({
         <button onClick={onAdd}>add</button>
         live
         <CheckBox value={live} onChange={onChangeLive} />
+        useCache
+        <CheckBox value={useCache} onChange={onChangeUseCache} />
         <div>k={k}</div>
         <Slider value={k} onChange={onChangeK} min={1} max={100} />
         <div>freqLow={freqLow}</div>
@@ -111,12 +121,7 @@ export const Config: React.FC<Props> = ({
           max={freqUp}
         />
         <div>freqUp={freqUp}</div>
-        <Slider
-          value={freqUp}
-          onChange={onChangeFreqUp}
-          min={freqLow}
-          max={100}
-        />
+        <Slider value={freqUp} onChange={onChangeFreqUp} min={-1} max={100} />
         <div>
           cx(bp)
           <NumInput
@@ -149,6 +154,10 @@ export const Config: React.FC<Props> = ({
               onChangeRegion(newRegion)
             }}
           />
+        </div>
+        <div>
+          cache scale(bp/px)
+          <NumInput value={cacheScale} onChange={onChangeCacheScale} />
         </div>
         <div>
           forward

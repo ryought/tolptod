@@ -24,11 +24,11 @@ func (m Matrix) Set(x int, y int, v bool) {
 	if y < 0 || y >= m.Y {
 		panic("y out of range")
 	}
-	m.m[x*m.Y+y] = v
+	m.m[y*m.X+x] = v
 }
 
 func (m Matrix) Get(x int, y int) bool {
-	return m.m[x*m.Y+y]
+	return m.m[y*m.X+x]
 }
 func (m Matrix) Drain() []Point {
 	points := make([]Point, 0)
