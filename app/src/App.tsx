@@ -80,40 +80,40 @@ function App() {
   const [live, setLive] = useState<boolean>(true)
   const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
   const [plots, setPlots] = useState<Plot[]>([])
+  const scale = Math.ceil(region.scale)
+  const xA = clamp(
+    Math.round(region.center.x - (width * region.scale) / 2),
+    0,
+    targetLen
+  )
+  const xB = clamp(
+    Math.round(region.center.x + (width * region.scale) / 2),
+    0,
+    targetLen
+  )
+  const yA = clamp(
+    Math.round(region.center.y - (height * region.scale) / 2),
+    0,
+    queryLen
+  )
+  const yB = clamp(
+    Math.round(region.center.y + (height * region.scale) / 2),
+    0,
+    queryLen
+  )
+  const request: Request = {
+    x: targetIndex,
+    y: queryIndex,
+    xA,
+    xB,
+    yA,
+    yB,
+    k,
+    freqLow,
+    freqUp,
+    scale,
+  }
   const requestPlot = () => {
-    const scale = Math.ceil(region.scale)
-    const xA = clamp(
-      Math.round(region.center.x - (width * region.scale) / 2),
-      0,
-      targetLen
-    )
-    const xB = clamp(
-      Math.round(region.center.x + (width * region.scale) / 2),
-      0,
-      targetLen
-    )
-    const yA = clamp(
-      Math.round(region.center.y - (height * region.scale) / 2),
-      0,
-      queryLen
-    )
-    const yB = clamp(
-      Math.round(region.center.y + (height * region.scale) / 2),
-      0,
-      queryLen
-    )
-    const request: Request = {
-      x: targetIndex,
-      y: queryIndex,
-      xA,
-      xB,
-      yA,
-      yB,
-      k,
-      freqLow,
-      freqUp,
-      scale,
-    }
     const data = new FormData()
     data.append('json', JSON.stringify(request))
     console.log('send', request)
@@ -180,6 +180,15 @@ function App() {
     colorBackward,
   ])
 
+  const onUpdateCache = () => {
+    const data = new FormData()
+    data.append('json', JSON.stringify(request))
+    fetch(isDev ? 'http://localhost:8080/cache/' : 'cache/', {
+      method: 'POST',
+      body: data,
+    })
+  }
+
   const style = {
     width: '100vw',
     height: '100vh',
@@ -220,6 +229,7 @@ function App() {
         onChangeLive={setLive}
         plots={plots}
         onChangePlots={setPlots}
+        onUpdateCache={onUpdateCache}
       />
       <Dotplots
         region={region}

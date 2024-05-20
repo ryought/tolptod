@@ -101,10 +101,16 @@ func TestHoge(t *testing.T) {
 	mb4.Print()
 
 	// bin=4 from cache
-	// cache2 := NewCache(x, y, c2)
-	// mf4s, mb4s := cache2.ComputeMatrix(c4)
-	// t.Log("f4s")
-	// mf4s.Print()
-	// t.Log("b4s")
-	// mb4s.Print()
+	cache2 := NewCache(x, y, c2)
+	mf4s, mb4s := cache2.ComputeMatrix(c4)
+	t.Log("f4s")
+	mf4s.Print()
+	t.Log("b4s")
+	mb4s.Print()
+	if !mf4.Equal(mf4s) {
+		t.Error("error: mf4 != mf4s")
+	}
+	if !mb4.Equal(mb4s) {
+		t.Error("error: mb4 != mb4s")
+	}
 }

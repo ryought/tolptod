@@ -31,6 +31,8 @@ type Props = {
   querys: Record[]
   onChangeTargetIndex: (index: number) => void
   onChangeQueryIndex: (index: number) => void
+  // cache
+  onUpdateCache: () => void
 }
 
 export const Config: React.FC<Props> = ({
@@ -60,6 +62,7 @@ export const Config: React.FC<Props> = ({
   queryIndex,
   onChangeTargetIndex,
   onChangeQueryIndex,
+  onUpdateCache,
 }) => {
   const style = {
     position: 'absolute',
@@ -94,6 +97,7 @@ export const Config: React.FC<Props> = ({
           />
           len={querys[queryIndex]?.len}
         </div>
+        <button onClick={onUpdateCache}>update cache</button>
         <button onClick={onAdd}>add</button>
         live
         <CheckBox value={live} onChange={onChangeLive} />

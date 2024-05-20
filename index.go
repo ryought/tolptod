@@ -53,6 +53,18 @@ func NewIndexV2(xs [][]byte, ys [][]byte) IndexV2 {
 	return IndexV2{xindex, yindex}
 }
 
+func NewIndexV2FromRecords(xs []fasta.Record, ys []fasta.Record) IndexV2 {
+	xindex := make([]Index, len(xs))
+	for i, x := range xs {
+		xindex[i] = NewIndex(x.Seq)
+	}
+	yindex := make([]Index, len(ys))
+	for i, y := range ys {
+		yindex[i] = NewIndex(y.Seq)
+	}
+	return IndexV2{xindex, yindex}
+}
+
 func ComputeMatrix(xindex, yindex Index, config Config) (Matrix, Matrix) {
 	X := xindex.N
 	Y := yindex.N

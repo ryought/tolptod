@@ -34,19 +34,20 @@ type Plot struct {
 }
 
 type Request struct {
-	X       int `json:"x"`
-	Y       int `json:"y"`
-	XA      int `json:"xA"`
-	XB      int `json:"xB"`
-	YA      int `json:"yA"`
-	YB      int `json:"yB"`
-	K       int `json:"k"`
-	FreqLow int `json:"freqLow"`
-	FreqUp  int `json:"freqUp"`
-	Scale   int `json:"scale"`
+	X        int  `json:"x"`
+	Y        int  `json:"y"`
+	XA       int  `json:"xA"`
+	XB       int  `json:"xB"`
+	YA       int  `json:"yA"`
+	YB       int  `json:"yB"`
+	K        int  `json:"k"`
+	FreqLow  int  `json:"freqLow"`
+	FreqUp   int  `json:"freqUp"`
+	Scale    int  `json:"scale"`
+	UseCache bool `json:"useCache"`
 }
 
-func createGenerateHandler(xis []Index, yrs []fasta.Record) http.HandlerFunc {
+func createGenerateHandler(index IndexV2) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body := r.FormValue("json")
 		var req Request
@@ -55,11 +56,50 @@ func createGenerateHandler(xis []Index, yrs []fasta.Record) http.HandlerFunc {
 		}
 
 		log.Println("/generate requested", req, req.K)
-		forward, backward := FindMatch(xis[req.X], req.XA, req.XB, yrs[req.Y].Seq[req.YA:req.YB], req.Scale, req.K, req.FreqLow, req.FreqUp)
+		forward, backward := ComputeMatrix(index.xindex[req.X], index.yindex[req.Y], Config{
+			k:       req.K,
+			bin:     req.Scale,
+			freqLow: req.FreqLow,
+			freqUp:  req.FreqUp,
+			xL:      req.XA,
+			xR:      req.XB,
+			yL:      req.YA,
+			yR:      req.YB,
+		})
 		log.Println("matching done")
-		plot := Plot{http.StatusOK, "ok", forward, backward}
+		plot := Plot{http.StatusOK, "ok", forward.Drain(), backward.Drain()}
 
 		res, err := json.Marshal(plot)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Write(res)
+	}
+}
+
+func createCacheHandler(index IndexV2) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		body := r.FormValue("json")
+		var req Request
+		if err := json.Unmarshal([]byte(body), &req); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		log.Println("/cache requested", req.X, req.Y, req.K, req.Scale)
+		NewCache(
+			index.xindex[req.X],
+			index.yindex[req.Y],
+			Config{
+				k:       req.K,
+				bin:     req.Scale,
+				freqLow: req.FreqLow,
+				freqUp:  req.FreqUp,
+			})
+		log.Println("cache done")
+		res, err := json.Marshal("ok")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -127,13 +167,14 @@ func main() {
 
 	// build
 	log.Println("Building suffix array...")
-	indexes := BuildIndexes(xrs)
+	indexes := NewIndexV2FromRecords(xrs, yrs)
 	log.Println("Done")
 	info := toInfo(xrs, yrs)
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/info/", createInfoHandler(info))
-	http.HandleFunc("/generate/", createGenerateHandler(indexes, yrs))
+	http.HandleFunc("/cache/", createCacheHandler(indexes))
+	http.HandleFunc("/generate/", createGenerateHandler(indexes))
 
 	log.Printf("Server running on %s...", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))
