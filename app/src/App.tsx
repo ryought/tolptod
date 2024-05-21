@@ -229,6 +229,8 @@ function App() {
     background: backgroundColor,
   } as React.CSSProperties
 
+  const features = [{ start: 0, end: 100, label: 'hoge' }]
+
   return (
     <main style={style}>
       <Config
@@ -273,6 +275,7 @@ function App() {
         onChangeRegion={setRegion}
         onSizeChange={setSize}
         plots={currentPlot ? [...plots, currentPlot] : plots}
+        features={features}
       />
     </main>
   )

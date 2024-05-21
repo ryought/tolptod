@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { TouchPad, Region } from './TouchPad'
 import { TickBar } from './TickBar'
+import { Track, Feature } from './Track'
 import { Plot } from './App'
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
   onSizeChange: (size: { width: number; height: number }) => void
   onTouchEnd?: () => void
   plots: Plot[]
+  features: Feature[]
 }
 
 export const Dotplots: React.FC<Props> = ({
@@ -17,6 +19,7 @@ export const Dotplots: React.FC<Props> = ({
   onSizeChange,
   onTouchEnd = () => {},
   plots,
+  features,
 }) => {
   const [size, setSize] = useState({ width: 0, height: 0 })
   const style = {
@@ -34,6 +37,18 @@ export const Dotplots: React.FC<Props> = ({
         onSizeChange(size)
       }}
     >
+      <Track
+        direction="x"
+        center={region.center.x}
+        scale={region.scale}
+        features={features}
+      />
+      <Track
+        direction="y"
+        center={region.center.y}
+        scale={region.scale}
+        features={features}
+      />
       <TickBar direction="x" center={region.center.x} scale={region.scale} />
       <TickBar direction="y" center={region.center.y} scale={region.scale} />
       {plots
