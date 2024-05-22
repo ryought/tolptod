@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Dotplots } from './Dotplots'
 import { Dotplot, Points } from './Dotplot'
 import { Region } from './TouchPad'
+import type { Feature } from './Track'
 import { Config } from './Config'
 import { useDebounce } from './debounce'
 import { clamp } from './utils'
@@ -68,7 +69,7 @@ function App() {
   // k-mer related
   const [k, setK] = useState(16)
   const [freqLow, setFreqLow] = useState(1)
-  const [freqUp, setFreqUp] = useState(-1)
+  const [freqUp, setFreqUp] = useState(1)
 
   // touchpad related
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -76,6 +77,12 @@ function App() {
   const [region, setRegion] = useState<Region>({
     center: { x: 0, y: 0 },
     scale: 1,
+  })
+
+  // feature
+  const [features, setFeatures] = useState<{ x: Feature[]; y: Feature[] }>({
+    x: [],
+    y: [],
   })
 
   // dotplots
@@ -157,6 +164,10 @@ function App() {
     })
       .then((res) => res.json())
       .then((json) => {
+        setFeatures({
+          x: json.x ? json.x : [],
+          y: json.y ? json.y : [],
+        })
         console.log('features', json)
       })
   }
@@ -236,8 +247,6 @@ function App() {
     position: 'relative',
     background: backgroundColor,
   } as React.CSSProperties
-
-  const features = [{ start: 0, end: 100, label: 'hoge' }]
 
   return (
     <main style={style}>

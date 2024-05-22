@@ -10,7 +10,10 @@ type Props = {
   onSizeChange: (size: { width: number; height: number }) => void
   onTouchEnd?: () => void
   plots: Plot[]
-  features: Feature[]
+  features: {
+    x: Feature[]
+    y: Feature[]
+  }
 }
 
 export const Dotplots: React.FC<Props> = ({
@@ -41,13 +44,13 @@ export const Dotplots: React.FC<Props> = ({
         direction="x"
         center={region.center.x}
         scale={region.scale}
-        features={features}
+        features={features.x}
       />
       <Track
         direction="y"
         center={region.center.y}
         scale={region.scale}
-        features={features}
+        features={features.y}
       />
       <TickBar direction="x" center={region.center.x} scale={region.scale} />
       <TickBar direction="y" center={region.center.y} scale={region.scale} />

@@ -211,6 +211,7 @@ func main() {
 	// GFF parser
 	var xf gtf.GTFTree
 	if *xGFF != "" {
+		log.Println("Parsing", *xGFF)
 		features, err := gtf.ParseGTFFile(*xGFF)
 		if err != nil {
 			log.Fatalf("ParseGTF error: %s", err)

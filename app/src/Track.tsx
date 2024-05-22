@@ -4,7 +4,28 @@ import { useBoudingRect } from './useDom'
 export type Feature = {
   start: number
   end: number
+  seqname: string
+  source: string
+  type: string
+  strand: string
+  attributes: string
   label: string
+}
+
+const featureToLabel = (f: Feature) => {
+  return `${f.seqname}:${f.start}:${f.end}:${f.strand}\n${f.source}\n${f.type}\n${f.attributes}`
+}
+
+const featureToColor = (f: Feature): [string, number] => {
+  if (f.type === 'CDS') {
+    return ['#ff0000', 1]
+  } else if (f.type === 'exon') {
+    return ['#00ff00', 2]
+  } else if (f.type === 'gene') {
+    return ['#0000ff', 3]
+  } else {
+    return ['#222222', 0]
+  }
 }
 
 type Props = {
@@ -35,7 +56,7 @@ export const Track: React.FC<Props> = ({
       [h]: 20,
       background: 'white',
       position: 'absolute',
-      [H]: 20,
+      [H]: 40,
     }),
     []
   )
@@ -44,20 +65,23 @@ export const Track: React.FC<Props> = ({
   const items = useMemo(
     () =>
       features.map((feature, i) => {
+        const [color, offset] = featureToColor(feature)
         const style = {
           [W]: (feature.end - feature.start) / scale,
-          [H]: 20,
+          [H]: 10,
           [w]: (feature.start - start) / scale,
-          [h]: 0,
-          background: 'blue',
+          [h]: offset * 10,
+          background: color,
+          opacity: 0.5,
           position: 'absolute',
           fontSize: 10,
           zIndex: 50,
           overflow: 'hidden',
         } as React.CSSProperties
+        const label = feature.label || featureToLabel(feature)
         return (
-          <div style={style} key={i} title={feature.label}>
-            {feature.label}
+          <div style={style} key={i} title={label}>
+            {label}
           </div>
         )
       }),
