@@ -101,6 +101,7 @@ function App() {
   const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
   const [plots, setPlots] = useState<Plot[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
+  const [cacheJob, setCacheJob] = useState<Job | undefined>(undefined)
   const cancelJob = (id: string) => {
     const job = jobs.find((job) => job.id === id)
     if (job) {
@@ -264,10 +265,22 @@ function App() {
       useCache,
     }
     data.append('json', JSON.stringify(request))
+    const controller = new AbortController()
+    const id = crypto.randomUUID()
+    setCacheJob({ id, controller })
     fetch(isDev ? 'http://localhost:8080/cache/' : 'cache/', {
       method: 'POST',
       body: data,
+      signal: controller.signal,
     })
+      .then(() => setCacheJob(undefined))
+      .catch(() => setCacheJob(undefined))
+  }
+  const onCancelCacheJob = () => {
+    if (cacheJob) {
+      cacheJob.controller.abort()
+      setCacheJob(undefined)
+    }
   }
 
   const style = {
@@ -319,6 +332,8 @@ function App() {
         onChangeShowFeature={setShowFeature}
         jobs={jobs}
         onCancelJob={cancelJob}
+        cacheJob={cacheJob}
+        onCancelCacheJob={onCancelCacheJob}
       />
       <Dotplots
         region={region}

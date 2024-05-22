@@ -37,6 +37,8 @@ type Props = {
   useCache: boolean
   onChangeUseCache: (useCache: boolean) => void
   onUpdateCache: () => void
+  cacheJob: Job | undefined
+  onCancelCacheJob: () => void
   // feature
   showFeature: boolean
   onChangeShowFeature: (showFeature: boolean) => void
@@ -81,6 +83,8 @@ export const Config: React.FC<Props> = ({
   onChangeShowFeature,
   jobs,
   onCancelJob,
+  cacheJob,
+  onCancelCacheJob,
 }) => {
   const style = {
     position: 'absolute',
@@ -125,7 +129,11 @@ export const Config: React.FC<Props> = ({
           ))}
         </div>
         <div>
-          <button onClick={onUpdateCache}>update cache</button>
+          {cacheJob ? (
+            <button onClick={onCancelCacheJob}>cancel</button>
+          ) : (
+            <button onClick={onUpdateCache}>update cache</button>
+          )}
           useCache
           <CheckBox value={useCache} onChange={onChangeUseCache} />
         </div>
