@@ -95,8 +95,12 @@ export const Config: React.FC<Props> = ({
     padding: 10,
     margin: 10,
   } as React.CSSProperties
-  const targetIds = targets.map((record) => `${record.id} (${record.len}bp)`)
-  const queryIds = querys.map((record) => `${record.id} (${record.len}bp)`)
+  const targetIds = targets.map(
+    (record) => `${record.id} (${record.len.toLocaleString('en-US')}bp)`
+  )
+  const queryIds = querys.map(
+    (record) => `${record.id} (${record.len.toLocaleString('en-US')}bp)`
+  )
 
   return (
     <div style={style}>

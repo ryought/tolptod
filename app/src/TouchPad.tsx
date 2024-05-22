@@ -232,7 +232,6 @@ export const TouchPad: React.FC<Props> = ({
               height: '100%',
               left: pointer.x,
               background: 'black',
-              zIndex: 99,
             }}
           ></div>
           <div
@@ -242,7 +241,6 @@ export const TouchPad: React.FC<Props> = ({
               width: '100%',
               top: pointer.y,
               background: 'black',
-              zIndex: 99,
             }}
           ></div>
         </>

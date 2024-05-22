@@ -44,7 +44,7 @@ export const TickBar: React.FC<Props> = ({ direction, center, scale }) => {
     } as React.CSSProperties
     return (
       <div style={style} key={t}>
-        {t.toLocaleString()}
+        {t.toLocaleString('en-US')}
       </div>
     )
   })
