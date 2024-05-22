@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/ryought/tolptod/fasta"
 	"github.com/ryought/tolptod/gtf"
@@ -193,6 +194,27 @@ func createGFFTree(seqs []fasta.Seq, f string) gtf.GTFTree {
 	}
 }
 
+func hogeHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	log.Println("/hoge requested")
+	for i := 0; i < 5; i++ {
+		log.Println(i)
+		time.Sleep(time.Second)
+		select {
+		case <-ctx.Done():
+			err := ctx.Err()
+			log.Println("canceled", err)
+			return
+		default:
+			log.Println("no value")
+		}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	res, _ := json.Marshal("hoge")
+	w.Write(res)
+}
+
 var addr = flag.String("b", ":8080", "address:port to bind. Default: localhost and port 8080.")
 var help = flag.Bool("h", false, "show help")
 var version = flag.Bool("v", false, "show version")
@@ -247,6 +269,7 @@ func main() {
 	http.HandleFunc("/cache/", createCacheHandler(indexes, &cache))
 	http.HandleFunc("/generate/", createGenerateHandler(indexes, &cache))
 	http.HandleFunc("/features/", createFeaturesHandler(xf, yf))
+	http.HandleFunc("/hoge/", hogeHandler)
 
 	log.Printf("Server running on %s...", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Region } from './TouchPad'
 import { Record, Plot } from './App'
 
@@ -40,6 +40,11 @@ type Props = {
   // feature
   showFeature: boolean
   onChangeShowFeature: (showFeature: boolean) => void
+}
+
+type Request = {
+  id: string
+  controller: AbortController
 }
 
 export const Config: React.FC<Props> = ({
@@ -88,6 +93,37 @@ export const Config: React.FC<Props> = ({
   } as React.CSSProperties
   const targetIds = targets.map((record) => record.id)
   const queryIds = querys.map((record) => record.id)
+
+  const [requests, setRequests] = useState<Request[]>([])
+  const request = () => {
+    const controller = new AbortController()
+    const id = crypto.randomUUID()
+    const request: Request = { id, controller }
+    setRequests((requests) => [...requests, request])
+    fetch('http://localhost:8080/hoge/', {
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        console.log('hoge', json)
+        setRequests((requests) =>
+          requests.filter((request) => request.id !== id)
+        )
+      })
+      .catch((err) => {
+        console.log('err', err)
+        setRequests((requests) =>
+          requests.filter((request) => request.id !== id)
+        )
+      })
+  }
+  const cancel = (id: string) => {
+    const request = requests.find((request) => request.id === id)
+    if (request) {
+      request.controller.abort()
+    }
+  }
+
   return (
     <div style={style}>
       <details open>
@@ -191,6 +227,12 @@ export const Config: React.FC<Props> = ({
           />
         </div>
         <button onClick={onSave}>save</button>
+        <button onClick={request}>request</button>
+        {requests.map((request) => (
+          <button key={request.id} onClick={() => cancel(request.id)}>
+            cancel {request.id}
+          </button>
+        ))}
         {plots.map((plot, i) => {
           return (
             <div key={plot.key}>
