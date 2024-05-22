@@ -92,6 +92,7 @@ function App() {
   const count = useRef<number>(0)
   const [live, setLive] = useState<boolean>(true)
   const [useCache, setUseCache] = useState<boolean>(false)
+  const [showFeature, setShowFeature] = useState<boolean>(true)
   const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
   const [plots, setPlots] = useState<Plot[]>([])
   const scale = Math.ceil(region.scale)
@@ -158,18 +159,20 @@ function App() {
         addPlot(request, points)
       })
       .catch(() => alert('cannot /generate'))
-    fetch(isDev ? 'http://localhost:8080/features/' : 'features/', {
-      method: 'POST',
-      body: data,
-    })
-      .then((res) => res.json())
-      .then((json) => {
-        setFeatures({
-          x: json.x ? json.x : [],
-          y: json.y ? json.y : [],
-        })
-        console.log('features', json)
+    if (showFeature) {
+      fetch(isDev ? 'http://localhost:8080/features/' : 'features/', {
+        method: 'POST',
+        body: data,
       })
+        .then((res) => res.json())
+        .then((json) => {
+          setFeatures({
+            x: json.x ? json.x : [],
+            y: json.y ? json.y : [],
+          })
+          console.log('features', json)
+        })
+    }
   }
   const addPlot = (req: Request, points: Points) => {
     const { xA, xB, yA, yB, scale } = req
@@ -286,6 +289,8 @@ function App() {
         onChangeUseCache={setUseCache}
         cacheScale={cacheScale}
         onChangeCacheScale={setCacheScale}
+        showFeature={showFeature}
+        onChangeShowFeature={setShowFeature}
       />
       <Dotplots
         region={region}

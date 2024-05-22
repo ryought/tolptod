@@ -37,6 +37,9 @@ type Props = {
   useCache: boolean
   onChangeUseCache: (useCache: boolean) => void
   onUpdateCache: () => void
+  // feature
+  showFeature: boolean
+  onChangeShowFeature: (showFeature: boolean) => void
 }
 
 export const Config: React.FC<Props> = ({
@@ -71,6 +74,8 @@ export const Config: React.FC<Props> = ({
   onChangeCacheScale,
   onChangeUseCache,
   onUpdateCache,
+  showFeature,
+  onChangeShowFeature,
 }) => {
   const style = {
     position: 'absolute',
@@ -111,6 +116,8 @@ export const Config: React.FC<Props> = ({
         <CheckBox value={live} onChange={onChangeLive} />
         useCache
         <CheckBox value={useCache} onChange={onChangeUseCache} />
+        showFeature
+        <CheckBox value={showFeature} onChange={onChangeShowFeature} />
         <div>k={k}</div>
         <Slider value={k} onChange={onChangeK} min={1} max={100} />
         <div>freqLow={freqLow}</div>
