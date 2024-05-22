@@ -1,4 +1,10 @@
-import React, { useEffect, PointerEvent, WheelEvent, useRef } from 'react'
+import React, {
+  useState,
+  useEffect,
+  PointerEvent,
+  WheelEvent,
+  useRef,
+} from 'react'
 import { useBoudingRect, Rect } from './useDom'
 
 export type Point = {
@@ -122,6 +128,7 @@ export const TouchPad: React.FC<Props> = ({
   }, [width, height])
 
   const touches = useRef<Map<number, Touch>>(new Map())
+  const [pointer, setPointer] = useState<Point | null>(null)
 
   const onDown = (event: PointerEvent<HTMLDivElement>) => {
     if (touches.current.size < 2) {
@@ -140,6 +147,7 @@ export const TouchPad: React.FC<Props> = ({
   const onMove = (event: PointerEvent<HTMLDivElement>) => {
     const pointerId = event.pointerId
     const screenPoint = eventToScreenPoint(event, rect)
+    setPointer(screenPoint)
 
     const touch0 = touches.current.get(pointerId)
     if (!touch0) return // ignore pointer of which pointerdown event was missed
@@ -173,6 +181,7 @@ export const TouchPad: React.FC<Props> = ({
       // update other touch points
       touch.point = screenPointToPoint(touch.screenPoint, region, width, height)
     })
+    setPointer(null)
 
     if (onTouchChange) onTouchChange(toTouchList(touches.current))
     if (onTouchEnd) onTouchEnd()
@@ -214,6 +223,32 @@ export const TouchPad: React.FC<Props> = ({
       onPointerLeave={onUp}
       onWheel={onWheel}
     >
+      {pointer !== null ? (
+        <>
+          <div
+            style={{
+              position: 'absolute',
+              width: 1,
+              height: '100%',
+              left: pointer.x,
+              background: 'black',
+              zIndex: 99,
+            }}
+          ></div>
+          <div
+            style={{
+              position: 'absolute',
+              height: 1,
+              width: '100%',
+              top: pointer.y,
+              background: 'black',
+              zIndex: 99,
+            }}
+          ></div>
+        </>
+      ) : (
+        <></>
+      )}
       {children}
     </div>
   )
