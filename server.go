@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/ryought/tolptod/fasta"
 	"github.com/ryought/tolptod/gtf"
@@ -140,7 +141,7 @@ func createInfoHandler(info fasta.Info) http.HandlerFunc {
 	}
 }
 
-func createFeaturesHandler(xf gtf.GTFTree) http.HandlerFunc {
+func createFeaturesHandler(xf, yf gtf.GTFTree) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body := r.FormValue("json")
 		var req Request
@@ -149,10 +150,12 @@ func createFeaturesHandler(xf gtf.GTFTree) http.HandlerFunc {
 		}
 		log.Println("/features requested", req.X, req.Y, req.K, req.Scale)
 		xFs := xf.Find(req.X, req.XA, req.XB)
+		yFs := yf.Find(req.Y, req.YA, req.YB)
 		res, err := json.Marshal(Features{
 			Status: http.StatusOK,
 			Result: "ok",
 			X:      xFs,
+			Y:      yFs,
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -167,6 +170,27 @@ func createFeaturesHandler(xf gtf.GTFTree) http.HandlerFunc {
 func rootHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("/ requested")
 	w.Write(html)
+}
+
+func createGFFTree(seqs []fasta.Seq, f string) gtf.GTFTree {
+	if f == "" {
+		return gtf.BuildIntervalTree(seqs, []gtf.Feature{})
+	}
+	if strings.HasSuffix(f, "bed") {
+		log.Println("Parsing", f, "as BED")
+		features, err := gtf.ParseBEDFile(f)
+		if err != nil {
+			log.Fatalf("ParseBED error: %s", err)
+		}
+		return gtf.BuildIntervalTree(seqs, features)
+	} else {
+		log.Println("Parsing", f, "as GFF/GTF")
+		features, err := gtf.ParseGTFFile(f)
+		if err != nil {
+			log.Fatalf("ParseGTF error: %s", err)
+		}
+		return gtf.BuildIntervalTree(seqs, features)
+	}
 }
 
 var addr = flag.String("b", ":8080", "address:port to bind. Default: localhost and port 8080.")
@@ -209,15 +233,8 @@ func main() {
 	}
 
 	// GFF parser
-	var xf gtf.GTFTree
-	if *xGFF != "" {
-		log.Println("Parsing", *xGFF)
-		features, err := gtf.ParseGTFFile(*xGFF)
-		if err != nil {
-			log.Fatalf("ParseGTF error: %s", err)
-		}
-		xf = gtf.BuildIntervalTree(info.Xs, features)
-	}
+	xf := createGFFTree(info.Xs, *xGFF)
+	yf := createGFFTree(info.Ys, *yGFF)
 
 	// build
 	log.Println("Building suffix array...")
@@ -229,7 +246,7 @@ func main() {
 	http.HandleFunc("/info/", createInfoHandler(info))
 	http.HandleFunc("/cache/", createCacheHandler(indexes, &cache))
 	http.HandleFunc("/generate/", createGenerateHandler(indexes, &cache))
-	http.HandleFunc("/features/", createFeaturesHandler(xf))
+	http.HandleFunc("/features/", createFeaturesHandler(xf, yf))
 
 	log.Printf("Server running on %s...", *addr)
 	log.Fatal(http.ListenAndServe(*addr, nil))

@@ -23,6 +23,42 @@ func TestGTF(t *testing.T) {
 	}
 }
 
+func TestBED(t *testing.T) {
+	// bed3
+	{
+		bed3 := strings.Join([]string{
+			"chr1\t10\t100",
+			"chr2\t100\t200",
+		}, "\n")
+		res, err := ParseBED(strings.NewReader(bed3))
+		t.Log(res, err)
+		expected := []Feature{
+			{"chr1", "", "", 10, 100, "", ""},
+			{"chr2", "", "", 100, 200, "", ""},
+		}
+		if !slices.Equal(res, expected) {
+			t.Error()
+		}
+	}
+
+	// bed6
+	{
+		bed6 := strings.Join([]string{
+			"chr1\t10\t30\tHige\t.\t-",
+			"chr2\t100\t300\tHoge\t.\t+",
+		}, "\n")
+		res, err := ParseBED(strings.NewReader(bed6))
+		t.Log(res, err)
+		expected := []Feature{
+			{"chr1", "", "", 10, 30, "-", "Hige"},
+			{"chr2", "", "", 100, 300, "+", "Hoge"},
+		}
+		if !slices.Equal(res, expected) {
+			t.Error()
+		}
+	}
+}
+
 func TestGTFFile(t *testing.T) {
 	r, err := ParseGTFFile("./test.gtf")
 	t.Log("hoge", r, len(r), err)

@@ -67,3 +67,57 @@ func ParseGTFFile(filename string) ([]Feature, error) {
 	defer f.Close()
 	return ParseGTF(f)
 }
+
+func ParseBED(f io.Reader) ([]Feature, error) {
+	records := make([]Feature, 0)
+	r := csv.NewReader(f)
+	r.Comma = '\t'
+	r.Comment = '#'
+	for {
+		row, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		if len(row) < 3 {
+			return nil, fmt.Errorf("invalid BED")
+		}
+		start, err := strconv.Atoi(row[1])
+		if err != nil {
+			return nil, err
+		}
+		end, err := strconv.Atoi(row[2])
+		if err != nil {
+			return nil, err
+		}
+		var name string
+		var strand string
+		if len(row) >= 4 {
+			name = row[3]
+		}
+		if len(row) >= 6 {
+			strand = row[5]
+		}
+		record := Feature{
+			SeqName:    row[0],
+			Start:      start,
+			End:        end,
+			Attributes: name,
+			Strand:     strand,
+		}
+		records = append(records, record)
+	}
+
+	return records, nil
+}
+
+func ParseBEDFile(filename string) ([]Feature, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	return ParseBED(f)
+}
