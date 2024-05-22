@@ -11,13 +11,13 @@ import (
 )
 
 type Feature struct {
-	SeqName    string
-	Source     string
-	Type       string
-	Start      int
-	End        int
-	Strand     string
-	Attributes string
+	SeqName    string `json:"seqname"`
+	Source     string `json:"source"`
+	Type       string `json:"type"`
+	Start      int    `json:"start"`
+	End        int    `json:"end"`
+	Strand     string `json:"strand"`
+	Attributes string `json:"attributes"`
 }
 
 func ParseGTF(f io.Reader) ([]Feature, error) {
