@@ -78,7 +78,10 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 	matF := NewMatrix(nx, ny)
 	matB := NewMatrix(nx, ny)
 
-	for y := config.yL; y < min(config.yR, Y-K+1); y++ {
+	yL := config.yL
+	yR := min(config.yR, Y-K+1)
+	p := 0 // progress percentage
+	for y := yL; y < yR; y++ {
 		// check if canceled by caller
 		select {
 		case <-ctx.Done():
@@ -86,9 +89,13 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 			fmt.Println("canceled", err)
 			return matF, matB
 		default:
+			newp := 100 * (y - yL) / (yR - yL)
+			if newp > p {
+				p = newp
+				fmt.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
+			}
 		}
 
-		fmt.Println("y", y)
 		kmer := yindex.Forward.Bytes()[y : y+K]
 		xF := xindex.Forward.LookupAll(kmer)
 		xB := xindex.Backward.LookupAll(kmer)

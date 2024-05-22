@@ -118,6 +118,7 @@ function App() {
     )
   }, [querys, targets, queryIndex, targetIndex])
   const requestPlot = () => {
+    if (jobs.length > 0) return
     const data = new FormData()
     const xA = clamp(
       Math.round(region.center.x - (width * region.scale) / 2),
