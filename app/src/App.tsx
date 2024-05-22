@@ -151,6 +151,14 @@ function App() {
         addPlot(request, points)
       })
       .catch(() => alert('cannot /generate'))
+    fetch(isDev ? 'http://localhost:8080/features/' : 'features/', {
+      method: 'POST',
+      body: data,
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        console.log('features', json)
+      })
   }
   const addPlot = (req: Request, points: Points) => {
     const { xA, xB, yA, yB, scale } = req

@@ -7,32 +7,6 @@ import (
 	"github.com/ryought/tolptod/suffixarray"
 )
 
-type Info struct {
-	Xs []Seq `json:"xs"`
-	Ys []Seq `json:"ys"`
-}
-
-type Seq struct {
-	Id  string `json:"id"`
-	Len int    `json:"len"`
-}
-
-func toSeqInfo(rs []fasta.Record) []Seq {
-	is := make([]Seq, len(rs))
-	for i, r := range rs {
-		is[i].Id = string(r.ID)
-		is[i].Len = len(r.Seq)
-	}
-	return is
-}
-
-func toInfo(xrs []fasta.Record, yrs []fasta.Record) Info {
-	return Info{
-		Xs: toSeqInfo(xrs),
-		Ys: toSeqInfo(yrs),
-	}
-}
-
 func BuildIndexes(records []fasta.Record) []Index {
 	indexes := make([]Index, len(records))
 	for i, record := range records {
