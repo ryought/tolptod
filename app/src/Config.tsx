@@ -91,8 +91,8 @@ export const Config: React.FC<Props> = ({
     padding: 10,
     margin: 10,
   } as React.CSSProperties
-  const targetIds = targets.map((record) => record.id)
-  const queryIds = querys.map((record) => record.id)
+  const targetIds = targets.map((record) => `${record.id} (${record.len}bp)`)
+  const queryIds = querys.map((record) => `${record.id} (${record.len}bp)`)
 
   return (
     <div style={style}>
@@ -105,7 +105,6 @@ export const Config: React.FC<Props> = ({
             index={targetIndex}
             onChange={onChangeTargetIndex}
           />
-          len={targets[targetIndex]?.len}
         </div>
         <div>
           y(query)=
@@ -114,16 +113,26 @@ export const Config: React.FC<Props> = ({
             index={queryIndex}
             onChange={onChangeQueryIndex}
           />
-          len={querys[queryIndex]?.len}
         </div>
-        <button onClick={onUpdateCache}>update cache</button>
-        <button onClick={onAdd}>add</button>
-        live
-        <CheckBox value={live} onChange={onChangeLive} />
-        useCache
-        <CheckBox value={useCache} onChange={onChangeUseCache} />
-        showFeature
-        <CheckBox value={showFeature} onChange={onChangeShowFeature} />
+        <div>
+          <button onClick={onAdd}>add</button>
+          live
+          <CheckBox value={live} onChange={onChangeLive} />
+          {jobs.map((job) => (
+            <button key={job.id} onClick={() => onCancelJob(job.id)}>
+              cancel {job.id.slice(0, 5)}
+            </button>
+          ))}
+        </div>
+        <div>
+          <button onClick={onUpdateCache}>update cache</button>
+          useCache
+          <CheckBox value={useCache} onChange={onChangeUseCache} />
+        </div>
+        <div>
+          showFeature
+          <CheckBox value={showFeature} onChange={onChangeShowFeature} />
+        </div>
         <div>k={k}</div>
         <Slider value={k} onChange={onChangeK} min={1} max={100} />
         <div>freqLow={freqLow}</div>
@@ -197,11 +206,6 @@ export const Config: React.FC<Props> = ({
           />
         </div>
         <button onClick={onSave}>save</button>
-        {jobs.map((job) => (
-          <button key={job.id} onClick={() => onCancelJob(job.id)}>
-            cancel {job.id.slice(0, 5)}
-          </button>
-        ))}
         {plots.map((plot, i) => {
           return (
             <div key={plot.key}>
