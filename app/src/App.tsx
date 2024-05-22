@@ -30,6 +30,11 @@ export interface Request {
   useCache: boolean
 }
 
+export interface Job {
+  id: string
+  controller: AbortController
+}
+
 export type Plot = {
   key: number
   x: number
@@ -95,6 +100,13 @@ function App() {
   const [showFeature, setShowFeature] = useState<boolean>(true)
   const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
   const [plots, setPlots] = useState<Plot[]>([])
+  const [jobs, setJobs] = useState<Job[]>([])
+  const cancelJob = (id: string) => {
+    const job = jobs.find((job) => job.id === id)
+    if (job) {
+      job.controller.abort()
+    }
+  }
   const scale = Math.ceil(region.scale)
   const [cacheScale, setCacheScale] = useState<number>(1)
   useEffect(() => {
@@ -145,9 +157,16 @@ function App() {
     }
     data.append('json', JSON.stringify(request))
     console.log('send', request)
+
+    // request matrix
+    const controller = new AbortController()
+    const id = crypto.randomUUID()
+    const job: Job = { id, controller }
+    setJobs((jobs) => [...jobs, job])
     fetch(isDev ? 'http://localhost:8080/generate/' : 'generate/', {
       method: 'POST',
       body: data,
+      signal: controller.signal,
     })
       .then((res) => res.json())
       .then((json) => {
@@ -157,8 +176,14 @@ function App() {
         }
         // console.log('points', points)
         addPlot(request, points)
+        setJobs((jobs) => jobs.filter((job) => job.id !== id))
       })
-      .catch(() => alert('cannot /generate'))
+      .catch((err) => {
+        console.error(err)
+        setJobs((jobs) => jobs.filter((job) => job.id !== id))
+      })
+
+    // request features
     if (showFeature) {
       fetch(isDev ? 'http://localhost:8080/features/' : 'features/', {
         method: 'POST',
@@ -291,6 +316,8 @@ function App() {
         onChangeCacheScale={setCacheScale}
         showFeature={showFeature}
         onChangeShowFeature={setShowFeature}
+        jobs={jobs}
+        onCancelJob={cancelJob}
       />
       <Dotplots
         region={region}

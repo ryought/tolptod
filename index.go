@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/ryought/tolptod/fasta"
@@ -67,7 +68,7 @@ func NewIndexV2FromRecords(xs []fasta.Record, ys []fasta.Record) IndexV2 {
 	return IndexV2{xindex, yindex}
 }
 
-func ComputeMatrix(xindex, yindex Index, config Config) (Matrix, Matrix) {
+func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Matrix, Matrix) {
 	X := xindex.N
 	Y := yindex.N
 	W := config.bin
@@ -78,6 +79,15 @@ func ComputeMatrix(xindex, yindex Index, config Config) (Matrix, Matrix) {
 	matB := NewMatrix(nx, ny)
 
 	for y := config.yL; y < min(config.yR, Y-K+1); y++ {
+		// check if canceled by caller
+		select {
+		case <-ctx.Done():
+			err := ctx.Err()
+			fmt.Println("canceled", err)
+			return matF, matB
+		default:
+		}
+
 		fmt.Println("y", y)
 		kmer := yindex.Forward.Bytes()[y : y+K]
 		xF := xindex.Forward.LookupAll(kmer)
@@ -105,7 +115,7 @@ func ComputeMatrix(xindex, yindex Index, config Config) (Matrix, Matrix) {
 	return matF, matB
 }
 
-func NewCache(xindex, yindex Index, config Config) Cache {
+func NewCache(ctx context.Context, xindex, yindex Index, config Config) Cache {
 	c := Config{
 		k:       config.k,
 		bin:     config.bin,
@@ -116,7 +126,7 @@ func NewCache(xindex, yindex Index, config Config) Cache {
 		yL:      0,
 		yR:      yindex.N,
 	}
-	matF, matB := ComputeMatrix(xindex, yindex, c)
+	matF, matB := ComputeMatrix(ctx, xindex, yindex, c)
 	return Cache{
 		matF:   matF,
 		matB:   matB,
@@ -124,7 +134,7 @@ func NewCache(xindex, yindex Index, config Config) Cache {
 	}
 }
 
-func (c Cache) ComputeMatrix(config Config) (Matrix, Matrix) {
+func (c Cache) ComputeMatrix(ctx context.Context, config Config) (Matrix, Matrix) {
 	W0 := c.config.bin
 	W := config.bin
 	R := W / W0
@@ -146,6 +156,15 @@ func (c Cache) ComputeMatrix(config Config) (Matrix, Matrix) {
 	yL0 := config.yL / W0
 	yR0 := config.yR / W0
 	for y := yL0; y < yR0; y++ {
+		// check if canceled by caller
+		select {
+		case <-ctx.Done():
+			err := ctx.Err()
+			fmt.Println("canceled", err)
+			return matF, matB
+		default:
+		}
+
 		for x := xL0; x < xR0; x++ {
 			if c.matF.Get(x, y) == true {
 				matF.Set((x-xL0)/R, (y-yL0)/R, true)

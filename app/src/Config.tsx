@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Region } from './TouchPad'
-import { Record, Plot } from './App'
+import { Record, Plot, Job } from './App'
 
 type Props = {
   region: Region
@@ -40,11 +40,9 @@ type Props = {
   // feature
   showFeature: boolean
   onChangeShowFeature: (showFeature: boolean) => void
-}
-
-type Request = {
-  id: string
-  controller: AbortController
+  // job
+  jobs: Job[]
+  onCancelJob: (id: string) => void
 }
 
 export const Config: React.FC<Props> = ({
@@ -81,6 +79,8 @@ export const Config: React.FC<Props> = ({
   onUpdateCache,
   showFeature,
   onChangeShowFeature,
+  jobs,
+  onCancelJob,
 }) => {
   const style = {
     position: 'absolute',
@@ -93,36 +93,6 @@ export const Config: React.FC<Props> = ({
   } as React.CSSProperties
   const targetIds = targets.map((record) => record.id)
   const queryIds = querys.map((record) => record.id)
-
-  const [requests, setRequests] = useState<Request[]>([])
-  const request = () => {
-    const controller = new AbortController()
-    const id = crypto.randomUUID()
-    const request: Request = { id, controller }
-    setRequests((requests) => [...requests, request])
-    fetch('http://localhost:8080/hoge/', {
-      signal: controller.signal,
-    })
-      .then((res) => res.json())
-      .then((json) => {
-        console.log('hoge', json)
-        setRequests((requests) =>
-          requests.filter((request) => request.id !== id)
-        )
-      })
-      .catch((err) => {
-        console.log('err', err)
-        setRequests((requests) =>
-          requests.filter((request) => request.id !== id)
-        )
-      })
-  }
-  const cancel = (id: string) => {
-    const request = requests.find((request) => request.id === id)
-    if (request) {
-      request.controller.abort()
-    }
-  }
 
   return (
     <div style={style}>
@@ -227,10 +197,9 @@ export const Config: React.FC<Props> = ({
           />
         </div>
         <button onClick={onSave}>save</button>
-        <button onClick={request}>request</button>
-        {requests.map((request) => (
-          <button key={request.id} onClick={() => cancel(request.id)}>
-            cancel {request.id}
+        {jobs.map((job) => (
+          <button key={job.id} onClick={() => onCancelJob(job.id)}>
+            cancel {job.id.slice(0, 5)}
           </button>
         ))}
         {plots.map((plot, i) => {
