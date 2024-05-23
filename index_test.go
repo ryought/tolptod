@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"slices"
 	"testing"
 	"time"
 
@@ -142,5 +143,31 @@ func TestIndexPerformance(t *testing.T) {
 			yR:      n,
 		})
 		t.Logf("n=%d\tk=%d\t%dus", n, k, time.Since(start).Microseconds())
+	}
+}
+
+func TestListFn(t *testing.T) {
+	// Unique
+	xs := []int{0, 1, 5, 2, 1, 3, 2}
+	t.Log(xs)
+	ys := Unique(xs)
+	expected := []int{0, 1, 2, 3, 5}
+	t.Log(xs, ys)
+	if !slices.Equal(ys, expected) {
+		t.Error()
+	}
+
+	// Map
+	{
+		is := []int{0, 1, 5, 2, 1, 3, 2}
+		js := Map(is, 10, 2, 0, 10, false)
+		t.Log(is, js)
+	}
+	{
+		is := []int{0, 1, 5, 2, 1, 3, 2}
+		//         {      *  *     *  *}
+		// x-L   = {-2,-1,3, 0, -1,1, 0}
+		js := Map(is, 10, 2, 2, 8, false)
+		t.Log(is, js)
 	}
 }

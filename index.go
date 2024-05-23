@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/ryought/tolptod/fasta"
 	"github.com/ryought/tolptod/suffixarray"
@@ -93,7 +94,7 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 			newp := 100 * (y - yL) / (yR - yL)
 			if newp > p {
 				p = newp
-				// fmt.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
+				fmt.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
 			}
 		}
 
@@ -105,13 +106,36 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 		kmer := yindex.Forward.Bytes()[y : y+K]
 		xF := xindex.Forward.LookupAll(kmer)
 		xB := xindex.Backward.LookupAll(kmer)
-		// fmt.Printf("xF=%d xB=%d\n", xF.Len(), xB.Len())
 
 		// count for match in the region
+		// skip this kmer if the frequency condition is not satisfied
 		n := xF.Len() + xB.Len()
+		if n < config.freqLow || (config.freqUp != -1 && n > config.freqUp) {
+			continue
+		}
 
-		// fill the table
-		if config.freqLow <= n && (config.freqUp == -1 || n <= config.freqUp) {
+		if n > 100 {
+			yF := yindex.Forward.LookupAll(kmer)
+
+			// fill the table
+			xFC := Map(xF.List(), X-K, W, config.xL, config.xR, false)
+			xBC := Map(xB.List(), X-K, W, config.xL, config.xR, true)
+			yFC := Map(yF.List(), Y-K, W, config.yL, config.yR, false)
+			for i := range xFC {
+				for j := range yFC {
+					matF.Set(xFC[i], yFC[j], true)
+				}
+			}
+			for i := range xBC {
+				for j := range yFC {
+					matB.Set(xBC[i], yFC[j], true)
+				}
+			}
+			for i := 0; i < yF.Len(); i++ {
+				y := yF.Get(i)
+				done[y-yL] = true
+			}
+		} else {
 			for i := 0; i < xF.Len(); i++ {
 				x := xF.Get(i)
 				if config.xL <= x && x < config.xR {
@@ -127,6 +151,28 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 		}
 	}
 	return matF, matB
+}
+
+func Map(xs []int, N int, W int, L, R int, reverse bool) []int {
+	I := 0
+	for i := range xs {
+		var x int
+		if reverse {
+			x = N - xs[i]
+		} else {
+			x = xs[i]
+		}
+		if L <= x && x < R {
+			xs[I] = (x - L) / W
+			I += 1
+		}
+	}
+	return xs[:I]
+}
+
+func Unique(xs []int) []int {
+	slices.Sort(xs)
+	return slices.Compact(xs)
 }
 
 func NewCache(ctx context.Context, xindex, yindex Index, config Config) Cache {

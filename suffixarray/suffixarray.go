@@ -78,6 +78,14 @@ func (a *ints) slice(i, j int) ints {
 	return ints{nil, a.int64[i:j]}
 }
 
+func (a *ints) List() []int {
+	ret := make([]int, a.Len())
+	for i := 0; i < a.Len(); i++ {
+		ret[i] = a.Get(i)
+	}
+	return ret
+}
+
 // New creates a new [Index] for data.
 // [Index] creation time is O(N) for N = len(data).
 func New(data []byte) *Index {
