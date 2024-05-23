@@ -22,7 +22,7 @@ export const Dotplot: React.FC<Props> = ({
 }) => {
   const ref = useRef<HTMLCanvasElement>(null)
   const style = {
-    background: 'white',
+    background: '#FFF',
     opacity: 0.7,
     width: '100%',
     height: '100%',
@@ -44,6 +44,7 @@ export const Dotplot: React.FC<Props> = ({
 
     // reset canvas
     ctx.clearRect(0, 0, width, height)
+    ctx.globalAlpha = 0.5
 
     console.log('drawing..')
     ctx.fillStyle = colorForward

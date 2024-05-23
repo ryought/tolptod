@@ -340,7 +340,7 @@ function App() {
         onChangeRegion={setRegion}
         onSizeChange={setSize}
         plots={currentPlot ? [...plots, currentPlot] : plots}
-        features={features}
+        features={showFeature ? features : { x: [], y: [] }}
       />
     </main>
   )
