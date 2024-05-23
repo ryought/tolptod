@@ -133,7 +133,9 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 			}
 			for i := 0; i < yF.Len(); i++ {
 				y := yF.Get(i)
-				done[y-yL] = true
+				if yL <= y && y < yR {
+					done[y-yL] = true
+				}
 			}
 		} else {
 			for i := 0; i < xF.Len(); i++ {
