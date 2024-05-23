@@ -78,11 +78,31 @@ func createGenerateHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 		}
 		if req.UseCache {
 			log.Println("/generate requested with cache", req, req.K)
-			forward, backward = cache.ComputeMatrix(ctx, config)
+			p := 0 // progress percentage
+			forward, backward = cache.ComputeMatrixWithProgress(
+				ctx, config,
+				func(y, yL, yR int) {
+					newp := 100 * (y - yL) / (yR - yL)
+					if newp > p {
+						p = newp
+						log.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
+					}
+				},
+			)
 			log.Println("matching done")
 		} else {
 			log.Println("/generate requested", req, req.K)
-			forward, backward = ComputeMatrix(ctx, index.xindex[req.X], index.yindex[req.Y], config)
+			p := 0 // progress percentage
+			forward, backward = ComputeMatrixWithProgress(
+				ctx, index.xindex[req.X], index.yindex[req.Y], config,
+				func(y, yL, yR int) {
+					newp := 100 * (y - yL) / (yR - yL)
+					if newp > p {
+						p = newp
+						log.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
+					}
+				},
+			)
 			log.Println("matching done")
 		}
 		plot := Plot{http.StatusOK, "ok", forward.Drain(), backward.Drain()}
@@ -108,6 +128,7 @@ func createCacheHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 		}
 
 		log.Println("/cache requested", req.X, req.Y, req.K, req.Scale)
+		p := 0 // progress percentage
 		*cache = NewCache(
 			ctx,
 			index.xindex[req.X],
@@ -117,7 +138,15 @@ func createCacheHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 				bin:     req.Scale,
 				freqLow: req.FreqLow,
 				freqUp:  req.FreqUp,
-			})
+			},
+			func(y, yL, yR int) {
+				newp := 100 * (y - yL) / (yR - yL)
+				if newp > p {
+					p = newp
+					log.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
+				}
+			},
+		)
 		log.Println("cache done")
 		res, err := json.Marshal("ok")
 		if err != nil {

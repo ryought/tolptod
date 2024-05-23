@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"slices"
 
 	"github.com/ryought/tolptod/fasta"
@@ -70,6 +69,10 @@ func NewIndexV2FromRecords(xs []fasta.Record, ys []fasta.Record) IndexV2 {
 }
 
 func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Matrix, Matrix) {
+	return ComputeMatrixWithProgress(ctx, xindex, yindex, config, nil)
+}
+
+func ComputeMatrixWithProgress(ctx context.Context, xindex, yindex Index, config Config, onProgress func(int, int, int)) (Matrix, Matrix) {
 	X := xindex.N
 	Y := yindex.N
 	W := config.bin
@@ -82,19 +85,16 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 	yL := config.yL
 	yR := min(config.yR, Y-K+1)
 	done := make([]bool, yR-yL)
-	p := 0 // progress percentage
 	for y := yL; y < yR; y++ {
 		// check if canceled by caller
 		select {
 		case <-ctx.Done():
-			err := ctx.Err()
-			fmt.Println("canceled", err)
+			// err := ctx.Err()
+			// fmt.Println("canceled", err)
 			return matF, matB
 		default:
-			newp := 100 * (y - yL) / (yR - yL)
-			if newp > p {
-				p = newp
-				fmt.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
+			if onProgress != nil {
+				onProgress(y, yL, yR)
 			}
 		}
 
@@ -177,7 +177,7 @@ func Unique(xs []int) []int {
 	return slices.Compact(xs)
 }
 
-func NewCache(ctx context.Context, xindex, yindex Index, config Config) Cache {
+func NewCache(ctx context.Context, xindex, yindex Index, config Config, onProgress func(int, int, int)) Cache {
 	c := Config{
 		k:       config.k,
 		bin:     config.bin,
@@ -188,7 +188,7 @@ func NewCache(ctx context.Context, xindex, yindex Index, config Config) Cache {
 		yL:      0,
 		yR:      yindex.N,
 	}
-	matF, matB := ComputeMatrix(ctx, xindex, yindex, c)
+	matF, matB := ComputeMatrixWithProgress(ctx, xindex, yindex, c, onProgress)
 	return Cache{
 		matF:   matF,
 		matB:   matB,
@@ -197,6 +197,10 @@ func NewCache(ctx context.Context, xindex, yindex Index, config Config) Cache {
 }
 
 func (c Cache) ComputeMatrix(ctx context.Context, config Config) (Matrix, Matrix) {
+	return c.ComputeMatrixWithProgress(ctx, config, nil)
+}
+
+func (c Cache) ComputeMatrixWithProgress(ctx context.Context, config Config, onProgress func(int, int, int)) (Matrix, Matrix) {
 	W0 := c.config.bin
 	W := config.bin
 	R := W / W0
@@ -221,10 +225,13 @@ func (c Cache) ComputeMatrix(ctx context.Context, config Config) (Matrix, Matrix
 		// check if canceled by caller
 		select {
 		case <-ctx.Done():
-			err := ctx.Err()
-			fmt.Println("canceled", err)
+			// err := ctx.Err()
+			// fmt.Println("canceled", err)
 			return matF, matB
 		default:
+			if onProgress != nil {
+				onProgress(y, yL0, yR0)
+			}
 		}
 
 		for x := xL0; x < xR0; x++ {

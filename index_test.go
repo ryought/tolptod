@@ -108,7 +108,7 @@ func TestHoge(t *testing.T) {
 	mb4.Print()
 
 	// bin=4 from cache
-	cache2 := NewCache(ctx, x, y, c2)
+	cache2 := NewCache(ctx, x, y, c2, nil)
 	mf4s, mb4s := cache2.ComputeMatrix(ctx, c4)
 	t.Log("f4s")
 	mf4s.Print()
