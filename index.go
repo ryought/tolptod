@@ -112,7 +112,7 @@ func ComputeMatrixWithProgress(ctx context.Context, xindex, yindex Index, config
 		// count for match in the region
 		// skip this kmer if the frequency condition is not satisfied
 		freq := xF.Len() + xB.Len()
-		if freq < config.freqLow || (config.freqUp != -1 && freq > config.freqUp) {
+		if freq < config.freqLow || (config.freqUp != 0 && freq > config.freqUp) {
 			continue
 		}
 		localFreq := 0
@@ -128,7 +128,7 @@ func ComputeMatrixWithProgress(ctx context.Context, xindex, yindex Index, config
 				localFreq += 1
 			}
 		}
-		if localFreq < config.localFreqLow || (config.localFreqUp != -1 && localFreq > config.localFreqUp) {
+		if localFreq < config.localFreqLow || (config.localFreqUp != 0 && localFreq > config.localFreqUp) {
 			continue
 		}
 

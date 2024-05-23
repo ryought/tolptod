@@ -169,14 +169,14 @@ export const Config: React.FC<Props> = ({
         <Slider
           value={freqLow}
           onChange={onChangeFreqLow}
-          min={1}
+          min={0}
           max={freqUp}
         />
         <div>
           freqUp
           <NumInput value={freqUp} onChange={onChangeFreqUp} />
         </div>
-        <Slider value={freqUp} onChange={onChangeFreqUp} min={-1} max={100} />
+        <Slider value={freqUp} onChange={onChangeFreqUp} min={0} max={100} />
         <div>
           localFreqLow
           <NumInput value={localFreqLow} onChange={onChangeLocalFreqLow} />
@@ -184,7 +184,7 @@ export const Config: React.FC<Props> = ({
         <Slider
           value={localFreqLow}
           onChange={onChangeLocalFreqLow}
-          min={1}
+          min={0}
           max={localFreqUp}
         />
         <div>
@@ -194,7 +194,7 @@ export const Config: React.FC<Props> = ({
         <Slider
           value={localFreqUp}
           onChange={onChangeLocalFreqUp}
-          min={-1}
+          min={0}
           max={100}
         />
         <div>

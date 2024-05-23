@@ -76,10 +76,10 @@ function App() {
 
   // k-mer related
   const [k, setK] = useState(16)
-  const [freqLow, setFreqLow] = useState(1)
-  const [freqUp, setFreqUp] = useState(-1)
-  const [localFreqLow, setLocalFreqLow] = useState(1)
-  const [localFreqUp, setLocalFreqUp] = useState(-1)
+  const [freqLow, setFreqLow] = useState(0)
+  const [freqUp, setFreqUp] = useState(0)
+  const [localFreqLow, setLocalFreqLow] = useState(0)
+  const [localFreqUp, setLocalFreqUp] = useState(0)
   const [dotSize, setDotSize] = useState(1)
 
   // touchpad related
