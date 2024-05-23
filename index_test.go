@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
+
+	"github.com/ryought/tolptod/rand"
 )
 
 var ctx context.Context = context.Background()
@@ -115,5 +118,29 @@ func TestHoge(t *testing.T) {
 	}
 	if !mb4.Equal(mb4s) {
 		t.Error("error: mb4 != mb4s")
+	}
+}
+
+func TestIndexPerformance(t *testing.T) {
+	n := 1_000_000
+	s := rand.RandomDNA(n)
+	x := NewIndex(s)
+	y := NewIndex(s)
+
+	// bin=1
+	ks := []int{5, 10, 15, 20}
+	for _, k := range ks {
+		start := time.Now()
+		ComputeMatrix(ctx, x, y, Config{
+			k:       k,
+			bin:     1_000,
+			freqLow: 0,
+			freqUp:  -1,
+			xL:      0,
+			xR:      n,
+			yL:      0,
+			yR:      n,
+		})
+		t.Logf("n=%d\tk=%d\t%dus", n, k, time.Since(start).Microseconds())
 	}
 }

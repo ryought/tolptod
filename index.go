@@ -80,6 +80,7 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 
 	yL := config.yL
 	yR := min(config.yR, Y-K+1)
+	done := make([]bool, yR-yL)
 	p := 0 // progress percentage
 	for y := yL; y < yR; y++ {
 		// check if canceled by caller
@@ -92,13 +93,19 @@ func ComputeMatrix(ctx context.Context, xindex, yindex Index, config Config) (Ma
 			newp := 100 * (y - yL) / (yR - yL)
 			if newp > p {
 				p = newp
-				fmt.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
+				// fmt.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
 			}
+		}
+
+		// this k-mer is already calculated
+		if done[y-yL] {
+			continue
 		}
 
 		kmer := yindex.Forward.Bytes()[y : y+K]
 		xF := xindex.Forward.LookupAll(kmer)
 		xB := xindex.Backward.LookupAll(kmer)
+		// fmt.Printf("xF=%d xB=%d\n", xF.Len(), xB.Len())
 
 		// count for match in the region
 		n := xF.Len() + xB.Len()
