@@ -4,6 +4,7 @@ type Props = {
   width?: number
   height?: number
   points?: Points
+  dotSize?: number
   colorForward?: string
   colorBackward?: string
 }
@@ -17,6 +18,7 @@ export const Dotplot: React.FC<Props> = ({
   width,
   height,
   points = { forward: [], backward: [] },
+  dotSize = 1,
   colorForward = '#FF0000',
   colorBackward = '#0000FF',
 }) => {
@@ -49,18 +51,18 @@ export const Dotplot: React.FC<Props> = ({
     console.log('drawing..')
     ctx.fillStyle = colorForward
     for (const point of points.forward) {
-      ctx.fillRect(point[0], point[1], 1, 1)
+      ctx.fillRect(point[0], point[1], dotSize, dotSize)
     }
 
     ctx.fillStyle = colorBackward
     for (const point of points.backward) {
-      ctx.fillRect(point[0], point[1], 1, 1)
+      ctx.fillRect(point[0], point[1], dotSize, dotSize)
     }
 
     return () => {
       console.log('removing')
     }
-  }, [])
+  }, [dotSize])
 
   return <canvas ref={ref} width={width} height={height} style={style}></canvas>
 }

@@ -9,14 +9,16 @@ import (
 )
 
 type Config struct {
-	k       int
-	bin     int
-	freqLow int
-	freqUp  int
-	xL      int
-	xR      int
-	yL      int
-	yR      int
+	k            int
+	bin          int
+	freqLow      int
+	freqUp       int
+	localFreqLow int
+	localFreqUp  int
+	xL           int
+	xR           int
+	yL           int
+	yR           int
 }
 
 type Index struct {
@@ -109,15 +111,31 @@ func ComputeMatrixWithProgress(ctx context.Context, xindex, yindex Index, config
 
 		// count for match in the region
 		// skip this kmer if the frequency condition is not satisfied
-		n := xF.Len() + xB.Len()
-		if n < config.freqLow || (config.freqUp != -1 && n > config.freqUp) {
+		freq := xF.Len() + xB.Len()
+		if freq < config.freqLow || (config.freqUp != -1 && freq > config.freqUp) {
+			continue
+		}
+		localFreq := 0
+		for i := 0; i < xF.Len(); i++ {
+			x := xF.Get(i)
+			if config.xL <= x && x < config.xR {
+				localFreq += 1
+			}
+		}
+		for i := 0; i < xB.Len(); i++ {
+			x := X - xB.Get(i) - K
+			if config.xL <= x && x < config.xR {
+				localFreq += 1
+			}
+		}
+		if localFreq < config.localFreqLow || (config.localFreqUp != -1 && localFreq > config.localFreqUp) {
 			continue
 		}
 
-		if n > 100 {
+		// fill the table
+		if freq > 100 {
 			yF := yindex.Forward.LookupAll(kmer)
 
-			// fill the table
 			xFC := Map(xF.List(), X-K, W, config.xL, config.xR, false)
 			xBC := Map(xB.List(), X-K, W, config.xL, config.xR, true)
 			yFC := Map(yF.List(), Y-K, W, config.yL, config.yR, false)

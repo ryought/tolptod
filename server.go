@@ -43,17 +43,19 @@ type Features struct {
 }
 
 type Request struct {
-	X        int  `json:"x"`
-	Y        int  `json:"y"`
-	XA       int  `json:"xA"`
-	XB       int  `json:"xB"`
-	YA       int  `json:"yA"`
-	YB       int  `json:"yB"`
-	K        int  `json:"k"`
-	FreqLow  int  `json:"freqLow"`
-	FreqUp   int  `json:"freqUp"`
-	Scale    int  `json:"scale"`
-	UseCache bool `json:"useCache"`
+	X            int  `json:"x"`
+	Y            int  `json:"y"`
+	XA           int  `json:"xA"`
+	XB           int  `json:"xB"`
+	YA           int  `json:"yA"`
+	YB           int  `json:"yB"`
+	K            int  `json:"k"`
+	FreqLow      int  `json:"freqLow"`
+	FreqUp       int  `json:"freqUp"`
+	LocalFreqLow int  `json:"localFreqLow"`
+	LocalFreqUp  int  `json:"localFreqUp"`
+	Scale        int  `json:"scale"`
+	UseCache     bool `json:"useCache"`
 }
 
 func createGenerateHandler(index IndexV2, cache *Cache) http.HandlerFunc {
@@ -67,14 +69,16 @@ func createGenerateHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 
 		var forward, backward Matrix
 		config := Config{
-			k:       req.K,
-			bin:     req.Scale,
-			freqLow: req.FreqLow,
-			freqUp:  req.FreqUp,
-			xL:      req.XA,
-			xR:      req.XB,
-			yL:      req.YA,
-			yR:      req.YB,
+			k:            req.K,
+			bin:          req.Scale,
+			freqLow:      req.FreqLow,
+			freqUp:       req.FreqUp,
+			localFreqLow: req.LocalFreqLow,
+			localFreqUp:  req.LocalFreqUp,
+			xL:           req.XA,
+			xR:           req.XB,
+			yL:           req.YA,
+			yR:           req.YB,
 		}
 		if req.UseCache {
 			log.Println("/generate requested with cache", req, req.K)

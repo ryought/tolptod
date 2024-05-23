@@ -24,6 +24,12 @@ type Props = {
   onChangeFreqLow: (f: number) => void
   freqUp: number
   onChangeFreqUp: (f: number) => void
+  localFreqLow: number
+  onChangeLocalFreqLow: (f: number) => void
+  localFreqUp: number
+  onChangeLocalFreqUp: (f: number) => void
+  dotSize: number
+  onChangeDotSize: (dotSize: number) => void
   // Id related
   targetIndex: number
   queryIndex: number
@@ -68,6 +74,12 @@ export const Config: React.FC<Props> = ({
   onChangeFreqLow,
   freqUp,
   onChangeFreqUp,
+  localFreqLow,
+  onChangeLocalFreqLow,
+  localFreqUp,
+  onChangeLocalFreqUp,
+  dotSize,
+  onChangeDotSize,
   targets,
   querys,
   targetIndex,
@@ -145,17 +157,46 @@ export const Config: React.FC<Props> = ({
           showFeature
           <CheckBox value={showFeature} onChange={onChangeShowFeature} />
         </div>
-        <div>k={k}</div>
+        <div>
+          k
+          <NumInput value={k} onChange={onChangeK} />
+        </div>
         <Slider value={k} onChange={onChangeK} min={1} max={100} />
-        <div>freqLow={freqLow}</div>
+        <div>
+          freqLow
+          <NumInput value={freqLow} onChange={onChangeFreqLow} />
+        </div>
         <Slider
           value={freqLow}
           onChange={onChangeFreqLow}
           min={1}
           max={freqUp}
         />
-        <div>freqUp={freqUp}</div>
+        <div>
+          freqUp
+          <NumInput value={freqUp} onChange={onChangeFreqUp} />
+        </div>
         <Slider value={freqUp} onChange={onChangeFreqUp} min={-1} max={100} />
+        <div>
+          localFreqLow
+          <NumInput value={localFreqLow} onChange={onChangeLocalFreqLow} />
+        </div>
+        <Slider
+          value={localFreqLow}
+          onChange={onChangeLocalFreqLow}
+          min={1}
+          max={localFreqUp}
+        />
+        <div>
+          localFreqUp
+          <NumInput value={localFreqUp} onChange={onChangeLocalFreqUp} />
+        </div>
+        <Slider
+          value={localFreqUp}
+          onChange={onChangeLocalFreqUp}
+          min={-1}
+          max={100}
+        />
         <div>
           cx(bp)
           <NumInput
@@ -216,6 +257,10 @@ export const Config: React.FC<Props> = ({
             value={backgroundColor}
             onChange={(e) => onChangeBackgroundColor(e.target.value)}
           />
+        </div>
+        <div>
+          dotSize
+          <NumInput value={dotSize} onChange={onChangeDotSize} />
         </div>
         <button onClick={onSave}>save</button>
         {plots.map((plot, i) => {

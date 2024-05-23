@@ -24,6 +24,8 @@ export interface Request {
   k: number
   freqLow: number
   freqUp: number
+  localFreqLow: number
+  localFreqUp: number
   // bp per px
   scale: number
   // cache
@@ -50,6 +52,8 @@ export const floorMultiple = (x: number, m: number) => {
   return Math.floor(x / m) * m
 }
 
+const isDev = import.meta.env.MODE === 'development'
+
 function App() {
   // sequence names
   const [querys, setQuerys] = useState<Record[]>([])
@@ -58,7 +62,6 @@ function App() {
   const [targetIndex, setTargetIndex] = useState<number>(0)
   const queryLen = querys[queryIndex]?.len || 0
   const targetLen = targets[targetIndex]?.len || 0
-  const isDev = import.meta.env.MODE === 'development'
 
   useEffect(() => {
     // load query/target ids from api
@@ -74,7 +77,10 @@ function App() {
   // k-mer related
   const [k, setK] = useState(16)
   const [freqLow, setFreqLow] = useState(1)
-  const [freqUp, setFreqUp] = useState(1)
+  const [freqUp, setFreqUp] = useState(-1)
+  const [localFreqLow, setLocalFreqLow] = useState(1)
+  const [localFreqUp, setLocalFreqUp] = useState(-1)
+  const [dotSize, setDotSize] = useState(1)
 
   // touchpad related
   const [size, setSize] = useState({ width: 0, height: 0 })
@@ -155,6 +161,8 @@ function App() {
       scale: s,
       freqLow,
       freqUp,
+      localFreqLow,
+      localFreqUp,
       useCache,
     }
     data.append('json', JSON.stringify(request))
@@ -219,6 +227,7 @@ function App() {
           width={width}
           height={height}
           points={points}
+          dotSize={dotSize}
           colorForward={colorForward}
           colorBackward={colorBackward}
         />
@@ -245,8 +254,11 @@ function App() {
     k,
     freqLow,
     freqUp,
+    localFreqLow,
+    localFreqUp,
     colorForward,
     colorBackward,
+    dotSize,
   ])
 
   const onUpdateCache = () => {
@@ -261,6 +273,8 @@ function App() {
       k,
       freqLow,
       freqUp,
+      localFreqLow,
+      localFreqUp,
       scale: cacheScale,
       useCache,
     }
@@ -303,6 +317,12 @@ function App() {
         onChangeFreqLow={setFreqLow}
         freqUp={freqUp}
         onChangeFreqUp={setFreqUp}
+        localFreqLow={localFreqLow}
+        onChangeLocalFreqLow={setLocalFreqLow}
+        localFreqUp={localFreqUp}
+        onChangeLocalFreqUp={setLocalFreqUp}
+        dotSize={dotSize}
+        onChangeDotSize={setDotSize}
         // color
         colorForward={colorForward}
         onChangeColorForward={setColorForward}
