@@ -333,6 +333,7 @@ function App() {
     })
       .then((res) => res.json())
       .then((json) => console.log('/cache', json))
+      .then(() => updateCache())
   }
   const removeCache = (id: string) => {
     fetch(BASE_URL + `deletecache/${id}`, {

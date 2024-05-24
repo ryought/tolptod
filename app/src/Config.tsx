@@ -164,6 +164,7 @@ export const Config: React.FC<Props> = ({
             return (
               <div key={cache.id}>
                 <CheckBox
+                  disabled={!cache.done}
                   value={cacheId === cache.id}
                   onChange={(checked) => {
                     if (checked) onChangeCacheId(cache.id)
@@ -474,13 +475,15 @@ export const NumAndSliderInput: React.FC<NumAndSliderInputProps> = ({
 type CheckBoxProps = {
   value: boolean
   onChange: (value: boolean) => void
+  disabled?: boolean
 }
 
-const CheckBox: React.FC<CheckBoxProps> = ({ value, onChange }) => {
+const CheckBox: React.FC<CheckBoxProps> = ({ value, onChange, disabled }) => {
   return (
     <input
       type="checkbox"
       checked={value}
+      disabled={disabled}
       onChange={(e) => onChange(e.target.checked)}
     />
   )
