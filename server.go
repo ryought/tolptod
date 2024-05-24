@@ -188,6 +188,18 @@ func createCacheV2PostHandler(store *CacheStore) http.HandlerFunc {
 		w.Write(res)
 	}
 }
+func createCacheV2DeleteHandler(store *CacheStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ok := store.Cancel(r.PathValue("id"))
+		if !ok {
+			http.Error(w, "notfound", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Write([]byte("ok"))
+	}
+}
 func createCacheV2GetHandler(store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		entry, ok := store.Get(r.PathValue("id"))
@@ -329,6 +341,7 @@ func main() {
 	mux.HandleFunc("POST /cache/", createCacheHandler(indexes, &cache))
 	mux.HandleFunc("GET /cachev2/", createCacheV2GetListHandler(&store))
 	mux.HandleFunc("GET /cachev2/get/{id}", createCacheV2GetHandler(&store))
+	mux.HandleFunc("GET /cachev2/delete/{id}", createCacheV2DeleteHandler(&store))
 	mux.HandleFunc("GET /cachev2/post/{config}", createCacheV2PostHandler(&store))
 	mux.HandleFunc("POST /generate/", createGenerateHandler(indexes, &cache))
 	mux.HandleFunc("POST /features/", createFeaturesHandler(xf, yf))
