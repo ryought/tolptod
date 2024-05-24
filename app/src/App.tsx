@@ -49,11 +49,26 @@ export type Plot = {
   el: JSX.Element
 }
 
+export interface Cache {
+  id: string
+  status: 'done' | 'pending'
+  progress: number
+  config: {
+    x: number
+    y: number
+    k: number
+    bin: number
+    freqLow: number
+    freqUp: number
+  }
+}
+
 export const floorMultiple = (x: number, m: number) => {
   return Math.floor(x / m) * m
 }
 
 const isDev = import.meta.env.MODE === 'development'
+const BASE_URL = isDev ? 'http://localhost:8080/' : '/'
 
 function App() {
   // sequence names
@@ -66,7 +81,7 @@ function App() {
 
   useEffect(() => {
     // load query/target ids from api
-    fetch(isDev ? 'http://localhost:8080/info/' : 'info/')
+    fetch(BASE_URL + 'info/')
       .then((res) => res.json())
       .then((json) => {
         setTargets(json['xs'] as Record[])
@@ -103,18 +118,29 @@ function App() {
   const [backgroundColor, setBackgroundColor] = useState<string>('#808080')
   const count = useRef<number>(0)
   const [live, setLive] = useState<boolean>(true)
-  const [useCache, setUseCache] = useState<boolean>(false)
   const [showFeature, setShowFeature] = useState<boolean>(true)
   const [currentPlot, setCurrentPlot] = useState<Plot | null>(null)
   const [plots, setPlots] = useState<Plot[]>([])
   const [jobs, setJobs] = useState<Job[]>([])
-  const [cacheJob, setCacheJob] = useState<Job | undefined>(undefined)
   const cancelJob = (id: string) => {
     const job = jobs.find((job) => job.id === id)
     if (job) {
       job.controller.abort()
     }
   }
+  // cache
+  const [cacheId, setCacheId] = useState<string | null>(null)
+  const useCache = cacheId !== null
+  const [caches, setCaches] = useState<Cache[]>([])
+  const updateCache = () => {
+    fetch(BASE_URL + 'cache/')
+      .then((res) => res.json())
+      .then((json) => {
+        console.log('get', json)
+        setCaches(json as Cache[])
+      })
+  }
+
   const scale = Math.ceil(region.scale)
   const [cacheScale, setCacheScale] = useState<number>(1)
   useEffect(() => {
@@ -165,7 +191,7 @@ function App() {
       localFreqLow,
       localFreqUp,
       useCache,
-      cacheId: '0',
+      cacheId: cacheId || '',
     }
     data.append('json', JSON.stringify(request))
     console.log('send', request)
@@ -175,7 +201,7 @@ function App() {
     const id = crypto.randomUUID()
     const job: Job = { id, controller }
     setJobs((jobs) => [...jobs, job])
-    fetch(isDev ? 'http://localhost:8080/generate/' : 'generate/', {
+    fetch(BASE_URL + 'generate/', {
       method: 'POST',
       body: data,
       signal: controller.signal,
@@ -197,7 +223,7 @@ function App() {
 
     // request features
     if (showFeature) {
-      fetch(isDev ? 'http://localhost:8080/features/' : 'features/', {
+      fetch(BASE_URL + 'features/', {
         method: 'POST',
         body: data,
       })
@@ -263,7 +289,7 @@ function App() {
     dotSize,
   ])
 
-  const onUpdateCache = () => {
+  const addCache = () => {
     const data = new FormData()
     const request: Request = {
       x: targetIndex,
@@ -282,24 +308,18 @@ function App() {
       cacheId: '',
     }
     data.append('json', JSON.stringify(request))
-    const controller = new AbortController()
-    const id = crypto.randomUUID()
-    setCacheJob({ id, controller })
-    fetch(isDev ? 'http://localhost:8080/cache/' : 'cache/', {
+    fetch(BASE_URL + 'cache/', {
       method: 'POST',
       body: data,
-      signal: controller.signal,
     })
       .then((res) => res.json())
       .then((json) => console.log('/cache', json))
-      .then(() => setCacheJob(undefined))
-      .catch(() => setCacheJob(undefined))
   }
-  const onCancelCacheJob = () => {
-    if (cacheJob) {
-      cacheJob.controller.abort()
-      setCacheJob(undefined)
-    }
+  const removeCache = (id: string) => {
+    fetch(BASE_URL + `deletecache/${id}`, {
+      method: 'POST',
+    })
+    setCaches(caches.filter((cache) => cache.id !== id))
   }
 
   const style = {
@@ -348,17 +368,21 @@ function App() {
         onChangeLive={setLive}
         plots={plots}
         onChangePlots={setPlots}
-        onUpdateCache={onUpdateCache}
-        useCache={useCache}
-        onChangeUseCache={setUseCache}
+        // cache
+        caches={caches}
+        onUpdateCache={updateCache}
+        onAddCache={addCache}
+        onRemoveCache={removeCache}
+        cacheId={cacheId}
+        onChangeCacheId={setCacheId}
         cacheScale={cacheScale}
         onChangeCacheScale={setCacheScale}
+        // feature
         showFeature={showFeature}
         onChangeShowFeature={setShowFeature}
+        // cancel
         jobs={jobs}
         onCancelJob={cancelJob}
-        cacheJob={cacheJob}
-        onCancelCacheJob={onCancelCacheJob}
       />
       <Dotplots
         region={region}

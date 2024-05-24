@@ -1,6 +1,6 @@
 import React from 'react'
 import { Region } from './TouchPad'
-import { Record, Plot, Job } from './App'
+import { Record, Plot, Job, Cache } from './App'
 
 type Props = {
   region: Region
@@ -40,11 +40,12 @@ type Props = {
   // cache
   cacheScale: number
   onChangeCacheScale: (scale: number) => void
-  useCache: boolean
-  onChangeUseCache: (useCache: boolean) => void
+  caches: Cache[]
+  cacheId: string | null
+  onChangeCacheId: (cacheId: string | null) => void
+  onAddCache: () => void
+  onRemoveCache: (cacheId: string) => void
   onUpdateCache: () => void
-  cacheJob: Job | undefined
-  onCancelCacheJob: () => void
   // feature
   showFeature: boolean
   onChangeShowFeature: (showFeature: boolean) => void
@@ -86,17 +87,18 @@ export const Config: React.FC<Props> = ({
   queryIndex,
   onChangeTargetIndex,
   onChangeQueryIndex,
-  useCache,
+  caches,
+  cacheId,
+  onChangeCacheId,
   cacheScale,
   onChangeCacheScale,
-  onChangeUseCache,
+  onAddCache,
+  onRemoveCache,
   onUpdateCache,
   showFeature,
   onChangeShowFeature,
   jobs,
   onCancelJob,
-  cacheJob,
-  onCancelCacheJob,
 }) => {
   const style = {
     position: 'absolute',
@@ -135,6 +137,7 @@ export const Config: React.FC<Props> = ({
           />
         </div>
         <div>
+          plot
           <button onClick={onAdd}>add</button>
           live
           <CheckBox value={live} onChange={onChangeLive} />
@@ -145,23 +148,22 @@ export const Config: React.FC<Props> = ({
           ))}
         </div>
         <div>
-          {cacheJob ? (
-            <button onClick={onCancelCacheJob}>cancel</button>
-          ) : (
-            <button onClick={onUpdateCache}>update cache</button>
-          )}
-          useCache
-          <CheckBox value={useCache} onChange={onChangeUseCache} />
-          <button
-            onClick={() => {
-              fetch('http://localhost:8080/cache/')
-                .then((res) => res.json())
-                .then((json) => console.log('get /cache', json))
-                .catch((err) => console.error(err))
-            }}
-          >
-            List
-          </button>
+          cache
+          <button onClick={onAddCache}>add</button>
+          <button onClick={onUpdateCache}>update</button>
+          {caches.map((cache) => (
+            <div key={cache.id}>
+              <CheckBox
+                value={cacheId === cache.id}
+                onChange={(checked) => {
+                  if (checked) onChangeCacheId(cache.id)
+                  else onChangeCacheId(null)
+                }}
+              />
+              cache id={cache.id} {cache.progress} {cache.status}
+              <button onClick={() => onRemoveCache(cache.id)}>remove</button>
+            </div>
+          ))}
         </div>
         <div>
           showFeature

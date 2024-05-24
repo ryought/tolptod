@@ -51,13 +51,24 @@ func (s CacheStore) Get(id string) (Entry, bool) {
 
 // Stop
 func (s CacheStore) Cancel(id string) bool {
-	for _, entry := range s.entries {
+	index := -1
+	for i, entry := range s.entries {
 		if entry.Id == id {
 			entry.cancel()
-			return true
+			index = i
 		}
 	}
-	return false
+
+	// not found
+	if index == -1 {
+		return false
+	}
+
+	// remove i-th element in s.entries
+	// n := len(s.entries)
+	// s.entries[index] = s.entries[n-1]
+	// s.entries = s.entries[:n-1]
+	return true
 }
 
 // Start

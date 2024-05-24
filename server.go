@@ -177,21 +177,23 @@ func createCacheV2PostHandler(index *IndexV2, store *CacheStore) http.HandlerFun
 }
 func createCacheV2DeleteHandler(store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("DELETE /cache/{id}")
-		ok := store.Cancel(r.PathValue("id"))
+		id := r.PathValue("id")
+		log.Println("DELETE /cache/{id}", id)
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		ok := store.Cancel(id)
 		if !ok {
 			http.Error(w, "notfound", http.StatusNotFound)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Write([]byte("ok"))
 	}
 }
 func createCacheV2GetHandler(store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log.Println("GET /cache/{id}")
-		entry, ok := store.Get(r.PathValue("id"))
+		id := r.PathValue("id")
+		log.Println("GET /cache/{id}", id)
+		entry, ok := store.Get(id)
 		if !ok {
 			http.Error(w, "notfound", http.StatusNotFound)
 			return
@@ -331,7 +333,7 @@ func main() {
 	mux.HandleFunc("GET /cache/", createCacheV2GetListHandler(&store))
 	mux.HandleFunc("POST /cache/", createCacheV2PostHandler(&index, &store))
 	mux.HandleFunc("GET /cache/{id}", createCacheV2GetHandler(&store))
-	mux.HandleFunc("DELETE /cache/{id}", createCacheV2DeleteHandler(&store))
+	mux.HandleFunc("POST /deletecache/{id}", createCacheV2DeleteHandler(&store))
 
 	log.Printf("Server running on %s...", *addr)
 	log.Fatal(http.ListenAndServe(*addr, mux))
