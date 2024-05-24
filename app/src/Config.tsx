@@ -115,6 +115,7 @@ export const Config: React.FC<Props> = ({
   const queryIds = querys.map(
     (record) => `${record.id} (${record.len.toLocaleString('en-US')}bp)`
   )
+  const useCache = cacheId !== null
 
   return (
     <div style={style}>
@@ -123,6 +124,7 @@ export const Config: React.FC<Props> = ({
         <div>
           x(target)=
           <List
+            disabled={useCache}
             items={targetIds}
             index={targetIndex}
             onChange={onChangeTargetIndex}
@@ -131,6 +133,7 @@ export const Config: React.FC<Props> = ({
         <div>
           y(query)=
           <List
+            disabled={useCache}
             items={queryIds}
             index={queryIndex}
             onChange={onChangeQueryIndex}
@@ -151,35 +154,44 @@ export const Config: React.FC<Props> = ({
           cache
           <button onClick={onAddCache}>add</button>
           <button onClick={onUpdateCache}>update</button>
-          {caches.map((cache) => (
-            <div key={cache.id}>
-              <CheckBox
-                value={cacheId === cache.id}
-                onChange={(checked) => {
-                  if (checked) onChangeCacheId(cache.id)
-                  else onChangeCacheId(null)
-                }}
-              />
-              cache id={cache.id} {cache.progress} {cache.status}
-              <button onClick={() => onRemoveCache(cache.id)}>remove</button>
-            </div>
-          ))}
+          {caches.map((cache) => {
+            const config = cache.config
+            const summary = `X${config.x}Y${config.y} k${config.k}w${config.bin} ${config.freqLow}:${config.freqUp}`
+            return (
+              <div key={cache.id}>
+                <CheckBox
+                  value={cacheId === cache.id}
+                  onChange={(checked) => {
+                    if (checked) onChangeCacheId(cache.id)
+                    else onChangeCacheId(null)
+                  }}
+                />
+                {cache.id}({cache.done ? 'done' : `${cache.progress}%`}):
+                {summary}
+                <button onClick={() => onRemoveCache(cache.id)}>remove</button>
+              </div>
+            )
+          })}
         </div>
         <div>
           showFeature
           <CheckBox value={showFeature} onChange={onChangeShowFeature} />
         </div>
-        <div>
-          k
-          <NumInput value={k} onChange={onChangeK} />
-        </div>
-        <Slider value={k} onChange={onChangeK} min={1} max={100} />
+        <NumAndSliderInput
+          label="k"
+          value={k}
+          onChange={onChangeK}
+          min={1}
+          max={200}
+          disabled={useCache}
+        />
         <NumAndSliderInput
           label="freqLow"
           value={freqLow}
           onChange={onChangeFreqLow}
           min={0}
           max={freqUp}
+          disabled={useCache}
         />
         <NumAndSliderInput
           label="freqUp"
@@ -187,6 +199,7 @@ export const Config: React.FC<Props> = ({
           onChange={onChangeFreqUp}
           min={0}
           max={100}
+          disabled={useCache}
         />
         <NumAndSliderInput
           label="localFreqLow"
@@ -194,6 +207,7 @@ export const Config: React.FC<Props> = ({
           onChange={onChangeLocalFreqLow}
           min={0}
           max={localFreqUp}
+          disabled={useCache}
         />
         <NumAndSliderInput
           label="localFreqUp"
@@ -201,6 +215,7 @@ export const Config: React.FC<Props> = ({
           onChange={onChangeLocalFreqUp}
           min={0}
           max={100}
+          disabled={useCache}
         />
         <div>
           cx(bp)
@@ -329,6 +344,7 @@ type SliderProps = {
   max: number
   step?: number
   onChange: (value: number) => void
+  disabled?: boolean
 }
 
 export const Slider: React.FC<SliderProps> = ({
@@ -337,10 +353,12 @@ export const Slider: React.FC<SliderProps> = ({
   min,
   max,
   step,
+  disabled,
 }) => {
   return (
     <input
       type="range"
+      disabled={disabled}
       min={min}
       max={max}
       step={step ?? 1}
@@ -354,11 +372,18 @@ type ListProps = {
   items: string[]
   index: number
   onChange: (index: number) => void
+  disabled?: boolean
 }
 
-export const List: React.FC<ListProps> = ({ items, index, onChange }) => {
+export const List: React.FC<ListProps> = ({
+  items,
+  index,
+  onChange,
+  disabled,
+}) => {
   return (
     <select
+      disabled={disabled}
       value={index.toString()}
       onChange={(e) => {
         const value = e.target.value
@@ -379,6 +404,7 @@ type NumInputProps = {
   onChange: (value: number) => void
   min?: number
   max?: number
+  disabled?: boolean
 }
 
 export const NumInput: React.FC<NumInputProps> = ({
@@ -386,10 +412,12 @@ export const NumInput: React.FC<NumInputProps> = ({
   onChange,
   min,
   max,
+  disabled,
 }) => {
   return (
     <input
       type="number"
+      disabled={disabled}
       value={value}
       min={min}
       max={max}
@@ -405,6 +433,7 @@ type NumAndSliderInputProps = {
   onChange: (value: number) => void
   min: number
   max: number
+  disabled?: boolean
 }
 
 export const NumAndSliderInput: React.FC<NumAndSliderInputProps> = ({
@@ -413,14 +442,27 @@ export const NumAndSliderInput: React.FC<NumAndSliderInputProps> = ({
   onChange,
   min,
   max,
+  disabled,
 }) => {
   return (
     <div>
       <div>
         {label}
-        <NumInput value={value} onChange={onChange} min={min} max={max} />
+        <NumInput
+          value={value}
+          onChange={onChange}
+          min={min}
+          max={max}
+          disabled={disabled}
+        />
       </div>
-      <Slider value={value} onChange={onChange} min={min} max={max} />
+      <Slider
+        value={value}
+        onChange={onChange}
+        min={min}
+        max={max}
+        disabled={disabled}
+      />
     </div>
   )
 }

@@ -107,7 +107,9 @@ func (s *CacheStore) Request(index *IndexV2, config CacheConfig) string {
 				yR:           yindex.N,
 			},
 			func(y, yL, yR int) {
-				entry.Progress = 100 * (y - yL) / (yR - yL)
+				p := 100 * (y - yL) / (yR - yL)
+				entry.Progress = p
+				// fmt.Println("progress", p)
 			},
 		)
 		entry.cache = &cache

@@ -51,7 +51,7 @@ export type Plot = {
 
 export interface Cache {
   id: string
-  status: 'done' | 'pending'
+  done: boolean
   progress: number
   config: {
     x: number
@@ -139,6 +139,24 @@ function App() {
         console.log('get', json)
         setCaches(json as Cache[])
       })
+  }
+  const onChangeCacheId = (id: string | null) => {
+    if (id === null) {
+      setCacheId(null)
+    } else {
+      const cache = caches.find((cache) => cache.id === id)
+      if (cache) {
+        // set config as same as the cached config
+        const config = cache.config
+        setTargetIndex(config.x)
+        setQueryIndex(config.y)
+        setK(config.k)
+        setFreqLow(config.freqLow)
+        setFreqUp(config.freqUp)
+        // set id
+        setCacheId(id)
+      }
+    }
   }
 
   const scale = Math.ceil(region.scale)
@@ -287,6 +305,7 @@ function App() {
     colorForward,
     colorBackward,
     dotSize,
+    cacheId,
   ])
 
   const addCache = () => {
@@ -319,6 +338,7 @@ function App() {
     fetch(BASE_URL + `deletecache/${id}`, {
       method: 'POST',
     })
+    setCacheId(null)
     setCaches(caches.filter((cache) => cache.id !== id))
   }
 
@@ -374,7 +394,7 @@ function App() {
         onAddCache={addCache}
         onRemoveCache={removeCache}
         cacheId={cacheId}
-        onChangeCacheId={setCacheId}
+        onChangeCacheId={onChangeCacheId}
         cacheScale={cacheScale}
         onChangeCacheScale={setCacheScale}
         // feature
