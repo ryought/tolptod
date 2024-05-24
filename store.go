@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"time"
 )
 
 type CacheStore struct {
@@ -12,13 +11,21 @@ type CacheStore struct {
 }
 
 type Entry struct {
-	// c      Cache
-	Id       string `json:"id"`
-	Config   string `json:"config"`
-	Status   string `json:"status"`
-	Progress int    `json:"progress"`
-	Cache    int    `json:"cache"`
+	Id       string      `json:"id"`
+	Config   CacheConfig `json:"config"`
+	Status   string      `json:"status"`
+	Progress int         `json:"progress"`
+	cache    *Cache
 	cancel   func()
+}
+
+type CacheConfig struct {
+	X       int `json:"x"`
+	Y       int `json:"y"`
+	K       int `json:"k"`
+	Bin     int `json:"bin"`
+	FreqLow int `json:"freqLow"`
+	FreqUp  int `json:"freqUp"`
 }
 
 func NewCacheStore() CacheStore {
@@ -29,7 +36,6 @@ func NewCacheStore() CacheStore {
 }
 
 func (s *CacheStore) List() []*Entry {
-	fmt.Println("list", s)
 	return s.entries
 }
 
@@ -45,10 +51,8 @@ func (s CacheStore) Get(id string) (Entry, bool) {
 
 // Stop
 func (s CacheStore) Cancel(id string) bool {
-	fmt.Println("cancel", id)
 	for _, entry := range s.entries {
 		if entry.Id == id {
-			fmt.Println("call cancel()")
 			entry.cancel()
 			return true
 		}
@@ -57,8 +61,7 @@ func (s CacheStore) Cancel(id string) bool {
 }
 
 // Start
-func (s *CacheStore) Request(config string) string {
-	fmt.Println("request", config, s)
+func (s *CacheStore) Request(index *IndexV2, config CacheConfig) string {
 	id := fmt.Sprintf("%d", s.i)
 	ctx, cancel := context.WithCancel(context.Background())
 	entry := Entry{
@@ -66,35 +69,36 @@ func (s *CacheStore) Request(config string) string {
 		Config:   config,
 		Status:   "pending",
 		Progress: 0,
-		Cache:    0,
+		cache:    nil,
 		cancel:   cancel,
 	}
 	s.entries = append(s.entries, &entry)
 	go func() {
-		cache := HeavyTask(ctx, func(i int) {
-			entry.Progress = i
-			fmt.Println("progress", i)
-		})
-		entry.Cache = cache
+		xindex := index.xindex[config.X]
+		yindex := index.yindex[config.Y]
+		cache := NewCache(
+			ctx,
+			xindex,
+			yindex,
+			Config{
+				k:            config.K,
+				bin:          config.Bin,
+				freqLow:      config.FreqLow,
+				freqUp:       config.FreqUp,
+				localFreqLow: 0,
+				localFreqUp:  0,
+				xL:           0,
+				xR:           xindex.N,
+				yL:           0,
+				yR:           yindex.N,
+			},
+			func(y, yL, yR int) {
+				entry.Progress = 100 * (y - yL) / (yR - yL)
+			},
+		)
+		entry.cache = &cache
 		entry.Status = "done"
 	}()
 	s.i += 1
 	return id
-}
-
-func HeavyTask(ctx context.Context, onProgress func(int)) int {
-	fmt.Println("heavy task start")
-	for i := 0; i < 30; i++ {
-		select {
-		case <-ctx.Done():
-			fmt.Println("canceled", i)
-			return -1
-		default:
-			fmt.Println("not canceled", i)
-		}
-		time.Sleep(time.Second)
-		onProgress(i)
-	}
-	fmt.Println("heavy task end")
-	return 111
 }

@@ -43,23 +43,26 @@ type Features struct {
 }
 
 type Request struct {
-	X            int  `json:"x"`
-	Y            int  `json:"y"`
-	XA           int  `json:"xA"`
-	XB           int  `json:"xB"`
-	YA           int  `json:"yA"`
-	YB           int  `json:"yB"`
-	K            int  `json:"k"`
-	FreqLow      int  `json:"freqLow"`
-	FreqUp       int  `json:"freqUp"`
-	LocalFreqLow int  `json:"localFreqLow"`
-	LocalFreqUp  int  `json:"localFreqUp"`
-	Scale        int  `json:"scale"`
-	UseCache     bool `json:"useCache"`
+	X            int    `json:"x"`
+	Y            int    `json:"y"`
+	XA           int    `json:"xA"`
+	XB           int    `json:"xB"`
+	YA           int    `json:"yA"`
+	YB           int    `json:"yB"`
+	K            int    `json:"k"`
+	FreqLow      int    `json:"freqLow"`
+	FreqUp       int    `json:"freqUp"`
+	LocalFreqLow int    `json:"localFreqLow"`
+	LocalFreqUp  int    `json:"localFreqUp"`
+	Scale        int    `json:"scale"`
+	UseCache     bool   `json:"useCache"`
+	CacheId      string `json:"cacheId"`
 }
 
-func createGenerateHandler(index IndexV2, cache *Cache) http.HandlerFunc {
+func createGenerateHandler(index IndexV2, store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		ctx := r.Context()
 		body := r.FormValue("json")
 		var req Request
@@ -82,9 +85,20 @@ func createGenerateHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 		}
 		if req.UseCache {
 			log.Println("/generate requested with cache", req, req.K)
+			entry, ok := store.Get(req.CacheId)
+			if !ok {
+				http.Error(w, "cache not found", http.StatusNotFound)
+				return
+			}
+			if entry.Status != "done" {
+				http.Error(w, "cache not ready", http.StatusNotFound)
+				return
+			}
+
 			p := 0 // progress percentage
-			forward, backward = cache.ComputeMatrixWithProgress(
-				ctx, config,
+			forward, backward = entry.cache.ComputeMatrixWithProgress(
+				ctx,
+				config,
 				func(y, yL, yR int) {
 					newp := 100 * (y - yL) / (yR - yL)
 					if newp > p {
@@ -116,55 +130,13 @@ func createGenerateHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		w.Write(res)
-	}
-}
-
-func createCacheHandler(index IndexV2, cache *Cache) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		body := r.FormValue("json")
-		var req Request
-		if err := json.Unmarshal([]byte(body), &req); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-
-		log.Println("/cache requested", req.X, req.Y, req.K, req.Scale)
-		p := 0 // progress percentage
-		*cache = NewCache(
-			ctx,
-			index.xindex[req.X],
-			index.yindex[req.Y],
-			Config{
-				k:       req.K,
-				bin:     req.Scale,
-				freqLow: req.FreqLow,
-				freqUp:  req.FreqUp,
-			},
-			func(y, yL, yR int) {
-				newp := 100 * (y - yL) / (yR - yL)
-				if newp > p {
-					p = newp
-					log.Printf("progress %d%% (y=%d in [%d, %d])\n", p, y, yL, yR)
-				}
-			},
-		)
-		log.Println("cache done")
-		res, err := json.Marshal("ok")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		w.Write(res)
 	}
 }
 
 func createCacheV2GetListHandler(store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET /cache")
 		res, err := json.Marshal(store.List())
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -175,9 +147,24 @@ func createCacheV2GetListHandler(store *CacheStore) http.HandlerFunc {
 		w.Write(res)
 	}
 }
-func createCacheV2PostHandler(store *CacheStore) http.HandlerFunc {
+func createCacheV2PostHandler(index *IndexV2, store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id := store.Request(r.PathValue("config"))
+		log.Println("POST /cache")
+		body := r.FormValue("json")
+		var req Request
+		if err := json.Unmarshal([]byte(body), &req); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		log.Println("/cache requested", req.X, req.Y, req.K, req.Scale)
+		config := CacheConfig{
+			X:       req.X,
+			Y:       req.Y,
+			K:       req.K,
+			Bin:     req.Scale,
+			FreqLow: req.FreqLow,
+			FreqUp:  req.FreqUp,
+		}
+		id := store.Request(index, config)
 		res, err := json.Marshal(id)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -190,6 +177,7 @@ func createCacheV2PostHandler(store *CacheStore) http.HandlerFunc {
 }
 func createCacheV2DeleteHandler(store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("DELETE /cache/{id}")
 		ok := store.Cancel(r.PathValue("id"))
 		if !ok {
 			http.Error(w, "notfound", http.StatusNotFound)
@@ -202,6 +190,7 @@ func createCacheV2DeleteHandler(store *CacheStore) http.HandlerFunc {
 }
 func createCacheV2GetHandler(store *CacheStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("GET /cache/{id}")
 		entry, ok := store.Get(r.PathValue("id"))
 		if !ok {
 			http.Error(w, "notfound", http.StatusNotFound)
@@ -329,22 +318,20 @@ func main() {
 
 	// build
 	log.Println("Building suffix array...")
-	indexes := NewIndexV2FromRecords(xrs, yrs)
+	index := NewIndexV2FromRecords(xrs, yrs)
 	log.Println("Done")
-	var cache Cache
-
 	store := NewCacheStore()
 
+	// rooter
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", rootHandler)
 	mux.HandleFunc("GET /info/", createInfoHandler(info))
-	mux.HandleFunc("POST /cache/", createCacheHandler(indexes, &cache))
-	mux.HandleFunc("GET /cachev2/", createCacheV2GetListHandler(&store))
-	mux.HandleFunc("GET /cachev2/get/{id}", createCacheV2GetHandler(&store))
-	mux.HandleFunc("GET /cachev2/delete/{id}", createCacheV2DeleteHandler(&store))
-	mux.HandleFunc("GET /cachev2/post/{config}", createCacheV2PostHandler(&store))
-	mux.HandleFunc("POST /generate/", createGenerateHandler(indexes, &cache))
+	mux.HandleFunc("POST /generate/", createGenerateHandler(index, &store))
 	mux.HandleFunc("POST /features/", createFeaturesHandler(xf, yf))
+	mux.HandleFunc("GET /cache/", createCacheV2GetListHandler(&store))
+	mux.HandleFunc("POST /cache/", createCacheV2PostHandler(&index, &store))
+	mux.HandleFunc("GET /cache/{id}", createCacheV2GetHandler(&store))
+	mux.HandleFunc("DELETE /cache/{id}", createCacheV2DeleteHandler(&store))
 
 	log.Printf("Server running on %s...", *addr)
 	log.Fatal(http.ListenAndServe(*addr, mux))

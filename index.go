@@ -197,14 +197,16 @@ func Unique(xs []int) []int {
 
 func NewCache(ctx context.Context, xindex, yindex Index, config Config, onProgress func(int, int, int)) Cache {
 	c := Config{
-		k:       config.k,
-		bin:     config.bin,
-		freqLow: config.freqLow,
-		freqUp:  config.freqUp,
-		xL:      0,
-		xR:      xindex.N,
-		yL:      0,
-		yR:      yindex.N,
+		k:            config.k,
+		bin:          config.bin,
+		freqLow:      config.freqLow,
+		freqUp:       config.freqUp,
+		localFreqLow: 0,
+		localFreqUp:  0,
+		xL:           0,
+		xR:           xindex.N,
+		yL:           0,
+		yR:           yindex.N,
 	}
 	matF, matB := ComputeMatrixWithProgress(ctx, xindex, yindex, c, onProgress)
 	return Cache{

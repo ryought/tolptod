@@ -152,6 +152,16 @@ export const Config: React.FC<Props> = ({
           )}
           useCache
           <CheckBox value={useCache} onChange={onChangeUseCache} />
+          <button
+            onClick={() => {
+              fetch('http://localhost:8080/cache/')
+                .then((res) => res.json())
+                .then((json) => console.log('get /cache', json))
+                .catch((err) => console.error(err))
+            }}
+          >
+            List
+          </button>
         </div>
         <div>
           showFeature

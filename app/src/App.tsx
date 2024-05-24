@@ -30,6 +30,7 @@ export interface Request {
   scale: number
   // cache
   useCache: boolean
+  cacheId: string
 }
 
 export interface Job {
@@ -164,6 +165,7 @@ function App() {
       localFreqLow,
       localFreqUp,
       useCache,
+      cacheId: '0',
     }
     data.append('json', JSON.stringify(request))
     console.log('send', request)
@@ -277,6 +279,7 @@ function App() {
       localFreqUp,
       scale: cacheScale,
       useCache,
+      cacheId: '',
     }
     data.append('json', JSON.stringify(request))
     const controller = new AbortController()
@@ -287,6 +290,8 @@ function App() {
       body: data,
       signal: controller.signal,
     })
+      .then((res) => res.json())
+      .then((json) => console.log('/cache', json))
       .then(() => setCacheJob(undefined))
       .catch(() => setCacheJob(undefined))
   }
