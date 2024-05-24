@@ -201,13 +201,16 @@ export const TouchPad: React.FC<Props> = ({
   }
 
   useEffect(() => {
-    document.addEventListener(
-      'wheel',
-      (event) => {
-        event.preventDefault()
-      },
-      { passive: false }
-    )
+    const el = ref.current
+    if (el) {
+      el.addEventListener(
+        'wheel',
+        (event) => {
+          event.preventDefault()
+        },
+        { passive: false }
+      )
+    }
   }, [])
 
   return (

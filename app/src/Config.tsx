@@ -108,6 +108,8 @@ export const Config: React.FC<Props> = ({
     zIndex: 100,
     padding: 10,
     margin: 10,
+    maxHeight: '80vh',
+    overflow: 'scroll',
   } as React.CSSProperties
   const targetIds = targets.map(
     (record) => `${record.id} (${record.len.toLocaleString('en-US')}bp)`
@@ -115,6 +117,8 @@ export const Config: React.FC<Props> = ({
   const queryIds = querys.map(
     (record) => `${record.id} (${record.len.toLocaleString('en-US')}bp)`
   )
+  const targetLen = targets[targetIndex]?.len || 0
+  const queryLen = querys[queryIndex]?.len || 0
   const useCache = cacheId !== null
 
   return (
@@ -156,7 +160,7 @@ export const Config: React.FC<Props> = ({
           <button onClick={onUpdateCache}>update</button>
           {caches.map((cache) => {
             const config = cache.config
-            const summary = `X${config.x}Y${config.y} k${config.k}w${config.bin} ${config.freqLow}:${config.freqUp}`
+            const summary = `X${config.x}Y${config.y} k${config.k}w${config.bin} f${config.freqLow}:${config.freqUp}`
             return (
               <div key={cache.id}>
                 <CheckBox
@@ -217,28 +221,28 @@ export const Config: React.FC<Props> = ({
           max={100}
           disabled={useCache}
         />
-        <div>
-          cx(bp)
-          <NumInput
-            value={region.center.x}
-            onChange={(x) => {
-              const newRegion = { ...region }
-              newRegion.center.x = x
-              onChangeRegion(newRegion)
-            }}
-          />
-        </div>
-        <div>
-          cy(bp)
-          <NumInput
-            value={region.center.y}
-            onChange={(y) => {
-              const newRegion = { ...region }
-              newRegion.center.y = y
-              onChangeRegion(newRegion)
-            }}
-          />
-        </div>
+        <NumAndSliderInput
+          label="cx(bp)"
+          value={region.center.x}
+          onChange={(x) => {
+            const newRegion = { ...region }
+            newRegion.center.x = x
+            onChangeRegion(newRegion)
+          }}
+          min={0}
+          max={targetLen}
+        />
+        <NumAndSliderInput
+          label="cy(bp)"
+          value={region.center.y}
+          onChange={(y) => {
+            const newRegion = { ...region }
+            newRegion.center.y = y
+            onChangeRegion(newRegion)
+          }}
+          min={0}
+          max={queryLen}
+        />
         <div>
           scale(bp/px)
           <NumInput
