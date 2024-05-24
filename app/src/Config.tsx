@@ -162,36 +162,29 @@ export const Config: React.FC<Props> = ({
           <NumInput value={k} onChange={onChangeK} />
         </div>
         <Slider value={k} onChange={onChangeK} min={1} max={100} />
-        <div>
-          freqLow
-          <NumInput value={freqLow} onChange={onChangeFreqLow} />
-        </div>
-        <Slider
+        <NumAndSliderInput
+          label="freqLow"
           value={freqLow}
           onChange={onChangeFreqLow}
           min={0}
           max={freqUp}
         />
-        <div>
-          freqUp
-          <NumInput value={freqUp} onChange={onChangeFreqUp} />
-        </div>
-        <Slider value={freqUp} onChange={onChangeFreqUp} min={0} max={100} />
-        <div>
-          localFreqLow
-          <NumInput value={localFreqLow} onChange={onChangeLocalFreqLow} />
-        </div>
-        <Slider
+        <NumAndSliderInput
+          label="freqUp"
+          value={freqUp}
+          onChange={onChangeFreqUp}
+          min={0}
+          max={100}
+        />
+        <NumAndSliderInput
+          label="localFreqLow"
           value={localFreqLow}
           onChange={onChangeLocalFreqLow}
           min={0}
           max={localFreqUp}
         />
-        <div>
-          localFreqUp
-          <NumInput value={localFreqUp} onChange={onChangeLocalFreqUp} />
-        </div>
-        <Slider
+        <NumAndSliderInput
+          label="localFreqUp"
           value={localFreqUp}
           onChange={onChangeLocalFreqUp}
           min={0}
@@ -372,15 +365,51 @@ export const List: React.FC<ListProps> = ({ items, index, onChange }) => {
 type NumInputProps = {
   value: number
   onChange: (value: number) => void
+  min?: number
+  max?: number
 }
 
-export const NumInput: React.FC<NumInputProps> = ({ value, onChange }) => {
+export const NumInput: React.FC<NumInputProps> = ({
+  value,
+  onChange,
+  min,
+  max,
+}) => {
   return (
     <input
       type="number"
       value={value}
+      min={min}
+      max={max}
+      style={{ width: 100 }}
       onChange={(e) => onChange(parseFloat(e.target.value))}
     />
+  )
+}
+
+type NumAndSliderInputProps = {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  min: number
+  max: number
+}
+
+export const NumAndSliderInput: React.FC<NumAndSliderInputProps> = ({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+}) => {
+  return (
+    <div>
+      <div>
+        {label}
+        <NumInput value={value} onChange={onChange} min={min} max={max} />
+      </div>
+      <Slider value={value} onChange={onChange} min={min} max={max} />
+    </div>
   )
 }
 
