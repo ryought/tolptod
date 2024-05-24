@@ -90,7 +90,7 @@ func createGenerateHandler(index IndexV2, store *CacheStore) http.HandlerFunc {
 				http.Error(w, "cache not found", http.StatusNotFound)
 				return
 			}
-			if entry.Status != "done" {
+			if !entry.Done {
 				http.Error(w, "cache not ready", http.StatusNotFound)
 				return
 			}

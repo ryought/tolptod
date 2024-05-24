@@ -3,17 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strconv"
 )
 
 type CacheStore struct {
 	i       int
-	entries []*Entry
+	entries map[string]*Entry
 }
 
 type Entry struct {
 	Id       string      `json:"id"`
 	Config   CacheConfig `json:"config"`
-	Status   string      `json:"status"`
+	Done     bool        `json:"done"`
 	Progress int         `json:"progress"`
 	cache    *Cache
 	cancel   func()
@@ -31,43 +33,44 @@ type CacheConfig struct {
 func NewCacheStore() CacheStore {
 	return CacheStore{
 		i:       0,
-		entries: make([]*Entry, 0),
+		entries: make(map[string]*Entry),
 	}
 }
 
 func (s *CacheStore) List() []*Entry {
-	return s.entries
+	ret := make([]*Entry, 0)
+	for _, entry := range s.entries {
+		ret = append(ret, entry)
+	}
+	slices.SortFunc(ret, func(a, b *Entry) int {
+		ai, _ := strconv.Atoi(a.Id)
+		bi, _ := strconv.Atoi(b.Id)
+		return ai - bi
+	})
+	return ret
 }
 
-func (s CacheStore) Get(id string) (Entry, bool) {
-	for _, entry := range s.entries {
-		if entry.Id == id {
-			return *entry, true
-		}
-	}
-	var empty Entry
-	return empty, false
+func (s *CacheStore) Get(id string) (Entry, bool) {
+	entry, ok := s.entries[id]
+	return *entry, ok
 }
 
 // Stop
-func (s CacheStore) Cancel(id string) bool {
-	index := -1
-	for i, entry := range s.entries {
-		if entry.Id == id {
-			entry.cancel()
-			index = i
-		}
-	}
+func (s *CacheStore) Cancel(id string) bool {
+	entry, ok := s.entries[id]
 
 	// not found
-	if index == -1 {
+	if !ok {
 		return false
 	}
 
-	// remove i-th element in s.entries
-	// n := len(s.entries)
-	// s.entries[index] = s.entries[n-1]
-	// s.entries = s.entries[:n-1]
+	// stop
+	if !entry.Done {
+		entry.cancel()
+	}
+	// delete entry
+	delete(s.entries, id)
+
 	return true
 }
 
@@ -78,12 +81,12 @@ func (s *CacheStore) Request(index *IndexV2, config CacheConfig) string {
 	entry := Entry{
 		Id:       id,
 		Config:   config,
-		Status:   "pending",
+		Done:     false,
 		Progress: 0,
 		cache:    nil,
 		cancel:   cancel,
 	}
-	s.entries = append(s.entries, &entry)
+	s.entries[id] = &entry
 	go func() {
 		xindex := index.xindex[config.X]
 		yindex := index.yindex[config.Y]
@@ -108,7 +111,7 @@ func (s *CacheStore) Request(index *IndexV2, config CacheConfig) string {
 			},
 		)
 		entry.cache = &cache
-		entry.Status = "done"
+		entry.Done = true
 	}()
 	s.i += 1
 	return id
