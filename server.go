@@ -163,6 +163,49 @@ func createCacheHandler(index IndexV2, cache *Cache) http.HandlerFunc {
 	}
 }
 
+func createCacheV2GetListHandler(store *CacheStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res, err := json.Marshal(store.List())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Write(res)
+	}
+}
+func createCacheV2PostHandler(store *CacheStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := store.Request(r.PathValue("config"))
+		res, err := json.Marshal(id)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Write(res)
+	}
+}
+func createCacheV2GetHandler(store *CacheStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		entry, ok := store.Get(r.PathValue("id"))
+		if !ok {
+			http.Error(w, "notfound", http.StatusNotFound)
+			return
+		}
+		res, err := json.Marshal(entry)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+		w.Write(res)
+	}
+}
+
 func createInfoHandler(info fasta.Info) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println("/info requested", info)
@@ -278,12 +321,18 @@ func main() {
 	log.Println("Done")
 	var cache Cache
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/info/", createInfoHandler(info))
-	http.HandleFunc("/cache/", createCacheHandler(indexes, &cache))
-	http.HandleFunc("/generate/", createGenerateHandler(indexes, &cache))
-	http.HandleFunc("/features/", createFeaturesHandler(xf, yf))
+	store := NewCacheStore()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /", rootHandler)
+	mux.HandleFunc("GET /info/", createInfoHandler(info))
+	mux.HandleFunc("POST /cache/", createCacheHandler(indexes, &cache))
+	mux.HandleFunc("GET /cachev2/", createCacheV2GetListHandler(&store))
+	mux.HandleFunc("GET /cachev2/get/{id}", createCacheV2GetHandler(&store))
+	mux.HandleFunc("GET /cachev2/post/{config}", createCacheV2PostHandler(&store))
+	mux.HandleFunc("POST /generate/", createGenerateHandler(indexes, &cache))
+	mux.HandleFunc("POST /features/", createFeaturesHandler(xf, yf))
 
 	log.Printf("Server running on %s...", *addr)
-	log.Fatal(http.ListenAndServe(*addr, nil))
+	log.Fatal(http.ListenAndServe(*addr, mux))
 }
